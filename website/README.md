@@ -79,4 +79,4 @@ This website integrates the Image Forgery Detection CNN model developed by:
 - Omkar Kharmare
 - Gaurav Ghadage
 
-Original repository: [Image-Forgery-Detection-CNN](https://github.com/prithwirajsolunke/Image-Forgery-Detection-CNN)
+Original repository: [Image-Forgery-Detection-CNN](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN)
