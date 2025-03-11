@@ -1,10 +1,42 @@
-.idea/*
-src/__pycache__/
-src/cnn/*.pickle
-src/cnn/*.pt
-src/feature_fusion/__pycache__/__init__.cpython-37.pyc
-src/cnn/__pycache__/cnn_test.cpython-37.pyc
-src/cnn/__pycache__/cnn_implement.cpython-37.pyc
-*/.idea
-data/CASIA2
-data/NC16
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dataset folders
+data/CASIA2/
+data/NC16/
+
+# Uploaded images
+website/static/uploads/
+
+# Large model files
+*.pt
+*.pth
+*.h5
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Logs
+*.log
+
+# OS specific files
+.DS_Store
+Thumbs.db

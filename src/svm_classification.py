@@ -1,8 +1,14 @@
 import pandas as pd
-from classification.SVM import optimize_hyperparams, classify, print_confusion_matrix, find_misclassified
+from src.classification.SVM import optimize_hyperparams, classify, print_confusion_matrix, find_misclassified
+import os
+
+# Get the current directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
 
 # Read features and labels from CSV
-df = pd.read_csv(filepath_or_buffer='../data/output/features/CASIA2_WithRot_LR001_b128_nodrop.csv')
+features_path = os.path.join(project_root, 'data', 'output', 'features', 'CASIA2_WithRot_LR001_b128_nodrop.csv')
+df = pd.read_csv(filepath_or_buffer=features_path)
 X = df.loc[:, ~df.columns.isin(['labels', 'image_names'])]
 y = df['labels']
 
