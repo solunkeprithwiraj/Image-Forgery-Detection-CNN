@@ -78,8 +78,9 @@ def get_patch_yi(model, image):
 
     for patch in patches:  # for every patch
         img_tensor = transform(patch)
-        img_tensor.unsqueeze_(0)
-        img_variable = Variable(img_tensor.double())
+        img_tensor.unsqueeze_(0)  # Add batch dimension
+        # Use float instead of double to match model's expected input type
+        img_variable = Variable(img_tensor.float())
         yi = get_yi(model=model, patch=img_variable)
         y.append(yi)  # append Yi to Y
 

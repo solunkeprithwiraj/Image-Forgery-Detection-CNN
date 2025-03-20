@@ -143,10 +143,9 @@ body {
 }
 
 .preview-thumbnail {
-  max-height: 200px;
-  max-width: 100%;
-  border-radius: var(--border-radius);
+  max-height: 300px;
   object-fit: contain;
+  border-radius: 4px;
 }
 
 /* Result Section */
@@ -256,4 +255,97 @@ body {
 
 .fadeIn {
   animation: fadeIn 0.5s ease-in;
+}
+
+/* Localization Results */
+#localization-results {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+#localization-results h4 {
+  color: #333;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+#heatmap-image,
+#overlay-image,
+#contour-image {
+  max-height: 500px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.card-footer {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+/* Visualization Tabs */
+.nav-tabs .nav-link {
+  color: #495057;
+  background-color: #f8f9fa;
+  border-color: #dee2e6 #dee2e6 #fff;
+  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.25rem 0.25rem 0 0;
+  transition: all 0.2s ease;
+}
+
+.nav-tabs .nav-link:hover {
+  background-color: #e9ecef;
+  border-color: #dee2e6 #dee2e6 #fff;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--primary-color);
+  background-color: #fff;
+  border-color: #dee2e6 #dee2e6 #fff;
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.tab-content {
+  padding: 1rem 0;
+}
+
+.tab-pane {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Tampering Analysis Summary */
+#tampering-summary {
+  background-color: rgba(220, 53, 69, 0.05);
+  border-left: 4px solid var(--danger-color);
+  padding: 1rem;
+  border-radius: 0.25rem;
+}
+
+#tampering-summary strong {
+  color: var(--danger-color);
+}
+
+/* Responsive adjustments for localization */
+@media (max-width: 767.98px) {
+  .nav-tabs .nav-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  #heatmap-image,
+  #overlay-image,
+  #contour-image {
+    max-height: 350px;
+  }
+}
+
+/* Form checkbox styling */
+.form-check-input {
+  cursor: pointer;
+}
+
+.form-check-label {
+  cursor: pointer;
+  user-select: none;
 }
