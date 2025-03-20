@@ -1,9 +1,50 @@
-In case you want to test the pipeline, the following steps need to be taken:
+# Source Code Directory
 
-1) Extract CNN training patches: as shown in `extract_patches.py`
+This directory contains the source code for the improved image forgery detection model.
 
-2) Train CNN: open the `train_net.py` and change DATA_DIR to point to the patches path extracted from the previous step. Run the script, it will save the trained network as shown [here](https://github.com/kPsarakis/Image-Forgery-Detection-CNN/blob/9dc3f0468cf5f0161f2ac296ece98001a603c1ea/src/train_net.py#L30)
+## Demo Scripts
 
-3) Compute image features: as shown in `feature_extraction.py`. Here you will need to provide the trained CNN as input from the previous step. Change the path in the following [line](https://github.com/kPsarakis/Image-Forgery-Detection-CNN/blob/9dc3f0468cf5f0161f2ac296ece98001a603c1ea/src/feature_extraction.py#L8)
+- `improved_model_demo.py`: Main demo script for the improved model with all enhancements
+- `minimal_demo.py`: Minimal demo of the improved CNN architecture
+- `xgboost_demo.py`: Demo of XGBoost classifier with proper configuration
 
-4) Run SVM cross-validation: change the features path in `svm_classification.py` at line 5 to point to the latest feature extraction. Run the script.
+## Directory Structure
+
+- `cnn/`: CNN implementation including the improved architecture
+
+  - `cnn.py`: Original and improved CNN implementations
+  - `minimal_cnn.py`: Minimal version of the improved CNN
+  - `SRM_filters.py`: SRM filter implementation
+  - `train_cnn.py`: Enhanced training code
+
+- `feature_fusion/`: Feature fusion techniques
+
+  - `feature_fusion.py`: Enhanced feature fusion methods
+
+- `classification/`: Classification methods
+
+  - `advanced_classifiers.py`: Advanced classification techniques including XGBoost
+
+- `patch_extraction/`: Code for extracting patches from images
+
+- `plots/`: Visualization utilities
+
+## Running the Pipeline
+
+1. **Extract CNN training patches**: Use the patch extraction code in `patch_extraction/`
+
+2. **Train CNN**: Configure and run `cnn/train_cnn.py` with the extracted patches
+
+3. **Compute image features**: Use `feature_fusion/feature_fusion.py` with the trained CNN
+
+4. **Run classification**: Use `classification/advanced_classifiers.py` with the extracted features
+
+## Quick Demo
+
+For a quick demonstration of the improved model, run one of the demo scripts:
+
+```bash
+python improved_model_demo.py  # Full demo
+python minimal_demo.py         # Minimal architecture demo
+python xgboost_demo.py         # XGBoost classifier demo
+```

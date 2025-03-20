@@ -36,104 +36,294 @@ endblock %} {% block content %}
 <section id="upload-section" class="py-5">
   <div class="container">
     <div class="row justify-content-center">
-      <div class="col-md-8">
-        <div class="card shadow">
-          <div class="card-body p-4">
-            <h2 class="text-center mb-4">Upload an Image</h2>
-
-            <form id="upload-form" enctype="multipart/form-data">
-              <div class="mb-4">
-                <div class="upload-area" id="upload-area">
-                  <div class="upload-area-inner">
-                    <div class="upload-area-icon-main">
-                      <i class="fas fa-cloud-upload-alt"></i>
-                    </div>
-                    <h3 class="upload-area-title">
-                      Drag and drop your image here
-                    </h3>
-                    <p class="upload-area-description">
-                      or
-                      <label for="file-input" class="browse-link"
-                        >browse files</label
-                      >
-                    </p>
-                  </div>
-                  <input
-                    type="file"
-                    id="file-input"
-                    name="file"
-                    accept=".jpg,.jpeg,.png,.bmp,.tiff"
-                    hidden
-                  />
-                </div>
+      <div class="col-lg-8">
+        <div class="card shadow-lg border-0 rounded-lg">
+          <div class="card-header bg-primary text-white">
+            <h3 class="text-center font-weight-light my-2">
+              Image Forgery Detection
+            </h3>
+          </div>
+          <div class="card-body">
+            <!-- Upload Form -->
+            <form id="upload-form" class="mb-3" enctype="multipart/form-data">
+              <div
+                id="upload-area"
+                class="upload-area d-flex flex-column align-items-center justify-content-center p-5 border rounded bg-light mb-3"
+              >
+                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                <p class="mb-2">Drag & drop an image here</p>
+                <p class="text-muted small mb-3">or</p>
+                <label for="file-input" class="btn btn-outline-primary mb-0">
+                  Browse Files
+                </label>
+                <input
+                  type="file"
+                  id="file-input"
+                  accept="image/*"
+                  class="d-none"
+                />
               </div>
-
-              <div class="d-grid">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="localization-checkbox"
+                  />
+                  <label class="form-check-label" for="localization-checkbox">
+                    Show tampering localization (if detected)
+                  </label>
+                </div>
                 <button
                   type="submit"
-                  class="btn btn-primary btn-lg"
                   id="analyze-btn"
+                  class="btn btn-primary"
                   disabled
                 >
-                  <i class="fas fa-search me-2"></i>Analyze Image
+                  Analyze Image
                 </button>
               </div>
             </form>
 
-            <div id="loading" class="text-center my-4" style="display: none">
+            <!-- Loading -->
+            <div id="loading" class="text-center py-5" style="display: none">
               <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
               </div>
-              <p class="mt-2">Analyzing image... This may take a moment.</p>
+              <p class="mt-3">Analyzing image...</p>
             </div>
 
-            <div id="result" class="mt-4" style="display: none">
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="image-preview-container">
-                    <img
-                      id="preview-image"
-                      src=""
-                      alt="Uploaded Image"
-                      class="img-fluid rounded"
-                    />
+            <!-- Result -->
+            <div id="result" style="display: none">
+              <div class="row mb-4">
+                <div class="col-md-6 mb-3 mb-md-0">
+                  <div class="card h-100">
+                    <div class="card-header bg-light">
+                      <h5 class="card-title mb-0">Uploaded Image</h5>
+                    </div>
+                    <div
+                      class="card-body d-flex align-items-center justify-content-center"
+                    >
+                      <img
+                        id="preview-image"
+                        class="img-fluid rounded"
+                        alt="Uploaded image"
+                      />
+                    </div>
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="result-details">
-                    <h3 class="result-title mb-3">Analysis Result</h3>
-                    <div
-                      id="result-authentic"
-                      class="result-badge authentic"
-                      style="display: none"
-                    >
-                      <i class="fas fa-check-circle me-2"></i>Authentic
+                  <div class="card h-100">
+                    <div class="card-header bg-light">
+                      <h5 class="card-title mb-0">Analysis Result</h5>
                     </div>
-                    <div
-                      id="result-tampered"
-                      class="result-badge tampered"
-                      style="display: none"
-                    >
-                      <i class="fas fa-exclamation-triangle me-2"></i>Tampered
-                    </div>
-                    <div class="mt-3">
-                      <p>Confidence: <span id="confidence-value">0%</span></p>
-                      <div class="progress">
+                    <div class="card-body">
+                      <div class="mb-3">
+                        <span
+                          id="result-authentic"
+                          class="badge bg-success p-2"
+                          style="display: none"
+                        >
+                          <i class="fas fa-check-circle me-1"></i> Authentic
+                        </span>
+                        <span
+                          id="result-tampered"
+                          class="badge bg-danger p-2"
+                          style="display: none"
+                        >
+                          <i class="fas fa-exclamation-triangle me-1"></i>
+                          Tampered
+                        </span>
+                      </div>
+                      <p class="mb-2">Confidence:</p>
+                      <div class="progress mb-3">
                         <div
                           id="confidence-bar"
                           class="progress-bar"
                           role="progressbar"
                           style="width: 0%"
+                          aria-valuenow="0"
+                          aria-valuemin="0"
+                          aria-valuemax="100"
                         ></div>
                       </div>
-                    </div>
-                    <div class="mt-4">
-                      <button id="try-another" class="btn btn-outline-primary">
-                        <i class="fas fa-redo me-2"></i>Try Another Image
-                      </button>
+                      <p class="text-center" id="confidence-value">0%</p>
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <!-- Localization Results (New Section) -->
+              <div id="localization-results" style="display: none">
+                <h4 class="mb-3">Tampering Localization</h4>
+
+                <!-- Visualization Tabs -->
+                <ul
+                  class="nav nav-tabs mb-3"
+                  id="visualization-tabs"
+                  role="tablist"
+                >
+                  <li class="nav-item" role="presentation">
+                    <button
+                      class="nav-link active"
+                      id="heatmap-tab"
+                      data-bs-toggle="tab"
+                      data-bs-target="#heatmap-tab-pane"
+                      type="button"
+                      role="tab"
+                      aria-controls="heatmap-tab-pane"
+                      aria-selected="true"
+                    >
+                      Heatmap View
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button
+                      class="nav-link"
+                      id="overlay-tab"
+                      data-bs-toggle="tab"
+                      data-bs-target="#overlay-tab-pane"
+                      type="button"
+                      role="tab"
+                      aria-controls="overlay-tab-pane"
+                      aria-selected="false"
+                    >
+                      Overlay View
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button
+                      class="nav-link"
+                      id="contour-tab"
+                      data-bs-toggle="tab"
+                      data-bs-target="#contour-tab-pane"
+                      type="button"
+                      role="tab"
+                      aria-controls="contour-tab-pane"
+                      aria-selected="false"
+                    >
+                      Contour View
+                    </button>
+                  </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="visualization-tab-content">
+                  <!-- Heatmap Tab -->
+                  <div
+                    class="tab-pane fade show active"
+                    id="heatmap-tab-pane"
+                    role="tabpanel"
+                    aria-labelledby="heatmap-tab"
+                    tabindex="0"
+                  >
+                    <div class="card">
+                      <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Heatmap Visualization</h5>
+                      </div>
+                      <div
+                        class="card-body d-flex align-items-center justify-content-center"
+                      >
+                        <img
+                          id="heatmap-image"
+                          class="img-fluid rounded"
+                          alt="Tampering heatmap"
+                        />
+                      </div>
+                      <div class="card-footer bg-light">
+                        <small class="text-muted"
+                          >Warmer colors indicate higher probability of
+                          tampering</small
+                        >
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Overlay Tab -->
+                  <div
+                    class="tab-pane fade"
+                    id="overlay-tab-pane"
+                    role="tabpanel"
+                    aria-labelledby="overlay-tab"
+                    tabindex="0"
+                  >
+                    <div class="card">
+                      <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Overlay Visualization</h5>
+                      </div>
+                      <div
+                        class="card-body d-flex align-items-center justify-content-center"
+                      >
+                        <img
+                          id="overlay-image"
+                          class="img-fluid rounded"
+                          alt="Tampering overlay"
+                        />
+                      </div>
+                      <div class="card-footer bg-light">
+                        <small class="text-muted"
+                          >Highlighted areas show potential tampering
+                          regions</small
+                        >
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Contour Tab -->
+                  <div
+                    class="tab-pane fade"
+                    id="contour-tab-pane"
+                    role="tabpanel"
+                    aria-labelledby="contour-tab"
+                    tabindex="0"
+                  >
+                    <div class="card">
+                      <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Contour Visualization</h5>
+                      </div>
+                      <div
+                        class="card-body d-flex align-items-center justify-content-center"
+                      >
+                        <img
+                          id="contour-image"
+                          class="img-fluid rounded"
+                          alt="Tampering contours"
+                        />
+                      </div>
+                      <div class="card-footer bg-light">
+                        <small class="text-muted"
+                          >Green contours outline detected tampered regions with
+                          labels</small
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tampering Analysis Summary -->
+                <div class="card mt-3">
+                  <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Tampering Analysis</h5>
+                  </div>
+                  <div class="card-body">
+                    <div id="tampering-summary">
+                      <p class="mb-2">
+                        The analysis has detected potential tampering in this
+                        image.
+                      </p>
+                      <p class="mb-0">
+                        Use the visualization tabs above to view different
+                        representations of the tampered areas.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-center mt-4">
+                <button id="try-another" class="btn btn-outline-primary">
+                  Try Another Image
+                </button>
               </div>
             </div>
           </div>
@@ -190,8 +380,8 @@ endblock %} {% block content %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const uploadForm = document.getElementById("upload-form");
-    const fileInput = document.getElementById("file-input");
     const uploadArea = document.getElementById("upload-area");
+    const fileInput = document.getElementById("file-input");
     const analyzeBtn = document.getElementById("analyze-btn");
     const loading = document.getElementById("loading");
     const result = document.getElementById("result");
@@ -201,6 +391,14 @@ endblock %} {% block content %}
     const confidenceValue = document.getElementById("confidence-value");
     const confidenceBar = document.getElementById("confidence-bar");
     const tryAnother = document.getElementById("try-another");
+    const localizationCheckbox = document.getElementById(
+      "localization-checkbox"
+    );
+    const localizationResults = document.getElementById("localization-results");
+    const heatmapImage = document.getElementById("heatmap-image");
+    const overlayImage = document.getElementById("overlay-image");
+    const contourImage = document.getElementById("contour-image");
+    const tamperingSummary = document.getElementById("tampering-summary");
 
     // Handle drag and drop
     ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
@@ -242,34 +440,88 @@ endblock %} {% block content %}
     });
 
     function handleFiles(files) {
+      console.log("handleFiles called with", files.length, "files");
+
       if (files.length > 0) {
         const file = files[0];
+        console.log("File selected:", file.name, "Type:", file.type);
+
         if (file.type.match("image.*")) {
+          // Enable the analyze button
           analyzeBtn.disabled = false;
 
           // Show preview
           const reader = new FileReader();
           reader.onload = function (e) {
             uploadArea.innerHTML = `<img src="${e.target.result}" class="preview-thumbnail" alt="Preview">`;
+
+            // Re-create the file input since it was removed when we updated uploadArea
+            const newFileInput = document.createElement("input");
+            newFileInput.type = "file";
+            newFileInput.id = "file-input";
+            newFileInput.accept = "image/*";
+            newFileInput.className = "d-none";
+
+            // Create a new FileList-like object with our file
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            newFileInput.files = dataTransfer.files;
+
+            // Append the new file input to the upload area
+            uploadArea.appendChild(newFileInput);
+
+            // Update the fileInput reference
+            fileInput = newFileInput;
+
+            console.log(
+              "Preview shown and file input updated with file:",
+              file.name
+            );
           };
           reader.readAsDataURL(file);
         } else {
           alert("Please upload an image file");
           resetUploadArea();
         }
+      } else {
+        console.log("No files selected");
+        analyzeBtn.disabled = true;
       }
     }
 
     uploadForm.addEventListener("submit", function (e) {
       e.preventDefault();
+      console.log("Form submitted");
+      console.log("fileInput:", fileInput);
+      console.log("fileInput.files:", fileInput.files);
+      console.log(
+        "fileInput.files.length:",
+        fileInput.files ? fileInput.files.length : 0
+      );
 
-      if (fileInput.files.length === 0) {
+      if (!fileInput.files || fileInput.files.length === 0) {
+        console.error("No files in the file input");
         alert("Please select an image to analyze");
         return;
       }
 
+      // Create a new FormData object to ensure we're not using cached data
       const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
+
+      // Get the current file from the file input
+      const currentFile = fileInput.files[0];
+      console.log(
+        "Submitting file:",
+        currentFile.name,
+        "Type:",
+        currentFile.type,
+        "Size:",
+        currentFile.size
+      );
+
+      // Append the current file to the form data
+      formData.append("file", currentFile);
+      formData.append("show_localization", localizationCheckbox.checked);
 
       // Show loading
       uploadForm.style.display = "none";
@@ -279,6 +531,12 @@ endblock %} {% block content %}
       fetch("/analyze", {
         method: "POST",
         body: formData,
+        // Add cache control headers to prevent caching
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
       })
         .then((response) => {
           if (!response.ok) {
@@ -302,11 +560,32 @@ endblock %} {% block content %}
             resultTampered.style.display = "none";
             confidenceBar.classList.add("bg-success");
             confidenceBar.classList.remove("bg-danger");
+
+            // Hide localization results for authentic images
+            localizationResults.style.display = "none";
           } else {
             resultAuthentic.style.display = "none";
             resultTampered.style.display = "inline-flex";
             confidenceBar.classList.add("bg-danger");
             confidenceBar.classList.remove("bg-success");
+
+            // Show localization results if available
+            if (data.localization_available) {
+              localizationResults.style.display = "block";
+              heatmapImage.src = `/static/${data.heatmap_path}`;
+              overlayImage.src = `/static/${data.overlay_path}`;
+              contourImage.src = `/static/${data.contour_path}`;
+
+              // Update tampering summary if information is available
+              if (data.tampered_regions_count) {
+                tamperingSummary.innerHTML = `
+                  <p class="mb-2">The analysis has detected <strong>${data.tampered_regions_count}</strong> potentially tampered region(s) in this image.</p>
+                  <p class="mb-0">Use the visualization tabs above to view different representations of the tampered areas.</p>
+                `;
+              }
+            } else {
+              localizationResults.style.display = "none";
+            }
           }
 
           // Set confidence
@@ -325,24 +604,86 @@ endblock %} {% block content %}
     });
 
     tryAnother.addEventListener("click", function () {
+      // Hide results and show form
       result.style.display = "none";
       uploadForm.style.display = "block";
-      resetUploadArea();
+
+      // Completely reset the upload form to its original state
+      uploadArea.innerHTML = `
+        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+        <p class="mb-2">Drag & drop an image here</p>
+        <p class="text-muted small mb-3">or</p>
+        <label for="file-input" class="btn btn-outline-primary mb-0">
+          Browse Files
+        </label>
+      `;
+
+      // Create a new file input element
+      const newFileInput = document.createElement("input");
+      newFileInput.type = "file";
+      newFileInput.id = "file-input";
+      newFileInput.accept = "image/*";
+      newFileInput.className = "d-none";
+
+      // Append the new file input to the upload area
+      uploadArea.appendChild(newFileInput);
+
+      // Add the event listener to the new file input
+      newFileInput.addEventListener("change", function () {
+        handleFiles(this.files);
+      });
+
+      // Update the fileInput reference
+      fileInput = newFileInput;
+
+      // Reset the checkbox and button
+      localizationCheckbox.checked = false;
+      analyzeBtn.disabled = true;
+
+      // Re-attach drag and drop event listeners
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+      });
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        uploadArea.addEventListener(eventName, highlight, false);
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+      });
+
+      uploadArea.addEventListener("drop", handleDrop, false);
     });
 
     function resetUploadArea() {
       uploadArea.innerHTML = `
-                <div class="upload-area-inner">
-                    <div class="upload-area-icon-main">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                    </div>
-                    <h3 class="upload-area-title">Drag and drop your image here</h3>
-                    <p class="upload-area-description">
-                        or <label for="file-input" class="browse-link">browse files</label>
-                    </p>
-                </div>
-            `;
-      fileInput.value = "";
+        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+        <p class="mb-2">Drag & drop an image here</p>
+        <p class="text-muted small mb-3">or</p>
+        <label for="file-input" class="btn btn-outline-primary mb-0">
+          Browse Files
+        </label>
+      `;
+
+      // Create a new file input element
+      const newFileInput = document.createElement("input");
+      newFileInput.type = "file";
+      newFileInput.id = "file-input";
+      newFileInput.accept = "image/*";
+      newFileInput.className = "d-none";
+
+      // Append the new file input to the upload area
+      uploadArea.appendChild(newFileInput);
+
+      // Add the event listener to the new file input
+      newFileInput.addEventListener("change", function () {
+        handleFiles(this.files);
+      });
+
+      // Update the fileInput reference
+      fileInput = newFileInput;
+
       analyzeBtn.disabled = true;
     }
   });
