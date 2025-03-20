@@ -1,0 +1,27 @@
+<svg width="600" height="400" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="600" height="400" fill="#f5f7fa" />
+  
+  <!-- Image Frame -->
+  <rect x="50" y="50" width="500" height="300" rx="10" ry="10" fill="#fff" stroke="#4e54c8" stroke-width="2" />
+  
+  <!-- Original Image (Left Side) -->
+  <rect x="75" y="75" width="200" height="250" rx="5" ry="5" fill="#e9ecef" />
+  <text x="175" y="200" font-family="Arial" font-size="16" text-anchor="middle" fill="#6c757d">Original Image</text>
+  
+  <!-- Arrow -->
+  <line x1="300" y1="200" x2="350" y2="200" stroke="#4e54c8" stroke-width="3" />
+  <polygon points="350,200 340,195 340,205" fill="#4e54c8" />
+  
+  <!-- Tampered Image (Right Side) -->
+  <rect x="375" y="75" width="200" height="250" rx="5" ry="5" fill="#e9ecef" />
+  <text x="475" y="200" font-family="Arial" font-size="16" text-anchor="middle" fill="#6c757d">Tampered Image</text>
+  
+  <!-- Warning Symbol -->
+  <circle cx="475" cy="125" r="25" fill="#dc3545" opacity="0.8" />
+  <text x="475" y="133" font-family="Arial" font-size="24" text-anchor="middle" fill="#fff">!</text>
+  
+  <!-- AI Detection Symbol -->
+  <circle cx="300" cy="300" r="30" fill="#4e54c8" opacity="0.8" />
+  <text x="300" y="308" font-family="Arial" font-size="14" text-anchor="middle" fill="#fff">AI</text>
+</svg> 

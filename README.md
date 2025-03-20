@@ -1,6 +1,87 @@
-# Image Forgery Detection with CNN
+# Image Forgery Detection using CNN
 
-This project implements an advanced CNN-based approach for image forgery detection, building upon the original work by Y. Rao et al. The improved model incorporates state-of-the-art techniques to enhance accuracy, robustness, and generalization.
+This project implements image forgery detection using Convolutional Neural Networks (CNN) and other machine learning techniques to identify manipulated images.
+
+## Project Structure
+
+```
+├── configs/               # Configuration files
+│   └── model_config.py    # Model parameters and settings
+├── data/                  # Data directory
+│   ├── raw/               # Original, immutable data
+│   ├── processed/         # Cleaned and processed data ready for modeling
+│   ├── interim/           # Intermediate data
+│   └── external/          # External data sources
+├── docs/                  # Documentation
+│   ├── images/            # Images for documentation
+│   └── plots/             # Generated plots and visualizations
+├── models/                # Model implementations
+│   └── weights/           # Saved model weights
+├── scripts/               # Utility scripts
+│   ├── minimal_demo.py    # Minimal demo script
+│   ├── run_improved_model.py # Improved model runner
+│   └── ...                # Other scripts
+├── tests/                 # Tests
+│   ├── test_models.py     # Model tests
+│   └── generate_test_report.py # Test report generator
+├── utils/                 # Utility functions
+│   ├── common.py          # Common utility functions
+│   ├── feature_extraction.py # Feature extraction utilities
+│   └── extract_patches.py # Image patch extraction utilities
+├── backend/               # Backend server implementation
+│   └── app.py             # Flask API
+└── react-frontend/        # React frontend application
+    └── src/               # Frontend source code
+```
+
+## Installation
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+For the frontend:
+
+```bash
+cd react-frontend
+npm install
+```
+
+## Usage
+
+### Running the Models
+
+```bash
+python scripts/run_improved_model.py
+```
+
+### Running the Backend Server
+
+```bash
+cd backend
+python app.py
+```
+
+### Running the Frontend
+
+```bash
+cd react-frontend
+npm run dev
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a new Pull Request
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)
 
 ## Overview
 

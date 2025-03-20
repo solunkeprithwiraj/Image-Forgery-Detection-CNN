@@ -23,6 +23,7 @@ ENV/
 data/CASIA2/
 data/NC16/
 
+data
 # Uploaded images
 website/static/uploads/
 
