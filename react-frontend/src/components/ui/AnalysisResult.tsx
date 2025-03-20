@@ -253,7 +253,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
       case "contour":
         return "Draws green outlines around specific regions identified as tampered, providing precise localization.";
       case "ela":
-        return "Error Level Analysis identifies areas with different compression levels, which can indicate manipulation.";
+        return "Error Level Analysis identifies areas with different compression levels, which can indicate manipulation. (For Some images ELA will not be available)";
       case "mask":
         return "Highlights tampered areas with a semi-transparent overlay, making it easy to identify affected areas.";
       case "edge":

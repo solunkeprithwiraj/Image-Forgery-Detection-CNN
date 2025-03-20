@@ -2,8 +2,21 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
 
+// Add Vite env type declaration
+declare global {
+  interface ImportMeta {
+    env: {
+      VITE_APP_AUTHOR_LINKEDIN?: string;
+      [key: string]: any;
+    };
+  }
+}
+
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+
+  // Environment variables
+  const linkedinUrl = import.meta.env.VITE_APP_AUTHOR_LINKEDIN || "#";
 
   return (
     <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
@@ -44,7 +57,7 @@ const Footer: React.FC = () => {
             </p>
             <div className="flex space-x-4">
               <a
-                href="https://github.com/yourusername/image-forgery-detection-cnn"
+                href="https://github.com/solunkeprithwiraj/image-forgery-detection-cnn"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition duration-200"
@@ -52,17 +65,15 @@ const Footer: React.FC = () => {
               >
                 <FaGithub className="w-5 h-5" />
               </a>
-              <a
-                href="https://twitter.com/yourusername"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition duration-200"
-                aria-label="Twitter"
+              <span
+                className="text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                aria-label="Twitter (disabled)"
+                title="Twitter link disabled"
               >
                 <FaTwitter className="w-5 h-5" />
-              </a>
+              </span>
               <a
-                href="https://linkedin.com/in/yourusername"
+                href={linkedinUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition duration-200"
@@ -114,7 +125,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="https://github.com/yourusername/image-forgery-detection-cnn/blob/main/README.md"
+                  href="https://github.com/solunkeprithwiraj/image-forgery-detection-cnn/blob/main/README.md"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition duration-200"
@@ -124,7 +135,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <a
-                  href="https://github.com/yourusername/image-forgery-detection-cnn/issues"
+                  href="https://github.com/solunkeprithwiraj/image-forgery-detection-cnn/issues"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition duration-200"
@@ -134,7 +145,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <a
-                  href="mailto:your.email@example.com"
+                  href="mailto:solunkeprithwiraj@gmail.com"
                   className="text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition duration-200"
                 >
                   Contact Us

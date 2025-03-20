@@ -36,7 +36,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   return (
     <div className="w-full">
       {!preview ? (
-        <motion.div
+        <div
           {...getRootProps()}
           className={`
             w-full border-2 border-dashed rounded-lg p-8 transition-colors
@@ -61,43 +61,47 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 : "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50"
             }
           `}
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
         >
-          <input {...getInputProps()} disabled={isProcessing} />
+          <motion.div
+            className="w-full h-full"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+          >
+            <input {...getInputProps()} disabled={isProcessing} />
 
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="h-16 w-16 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center mb-4">
+            <div className="flex flex-col items-center justify-center text-center">
+              <div className="h-16 w-16 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center mb-4">
+                {isDragActive ? (
+                  <FaUpload className="h-7 w-7 text-primary-600 dark:text-primary-400" />
+                ) : (
+                  <FaImage className="h-7 w-7 text-primary-600 dark:text-primary-400" />
+                )}
+              </div>
+
               {isDragActive ? (
-                <FaUpload className="h-7 w-7 text-primary-600 dark:text-primary-400" />
+                <p className="text-lg font-medium text-gray-900 dark:text-white">
+                  Drop the image here
+                </p>
               ) : (
-                <FaImage className="h-7 w-7 text-primary-600 dark:text-primary-400" />
+                <>
+                  <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Drag & drop an image here, or click to select
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Support for JPG, PNG, GIF, TIFF (Max size: {maxSizeInMB}MB)
+                  </p>
+                </>
+              )}
+
+              {error && (
+                <div className="mt-4 text-red-600 dark:text-red-400 flex items-center">
+                  <FaExclamationCircle className="mr-2" />
+                  <span>{error}</span>
+                </div>
               )}
             </div>
-
-            {isDragActive ? (
-              <p className="text-lg font-medium text-gray-900 dark:text-white">
-                Drop the image here
-              </p>
-            ) : (
-              <>
-                <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Drag & drop an image here, or click to select
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Support for JPG, PNG, GIF, TIFF (Max size: {maxSizeInMB}MB)
-                </p>
-              </>
-            )}
-
-            {error && (
-              <div className="mt-4 text-red-600 dark:text-red-400 flex items-center">
-                <FaExclamationCircle className="mr-2" />
-                <span>{error}</span>
-              </div>
-            )}
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       ) : (
         <div className="relative w-full rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700">
           <img

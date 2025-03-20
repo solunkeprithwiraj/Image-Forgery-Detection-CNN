@@ -78,7 +78,7 @@ const Home: React.FC = () => {
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.currentTarget.src =
-                        "https://via.placeholder.com/800x600/f3f4f6/94a3b8?text=Demo+Image";
+                        "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/cd6602ef-6f54-4a73-9570-2ef752696cf1/dejiebx-5a7f7d4d-2513-4e63-8909-6bd01d2b3b1a.jpg/v1/fill/w_1920,h_1280,q_75,strp/photoshop_manipulation_fish_by_furkankadran_dejiebx-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTI4MCIsInBhdGgiOiJcL2ZcL2NkNjYwMmVmLTZmNTQtNGE3My05NTcwLTJlZjc1MjY5NmNmMVwvZGVqaWVieC01YTdmN2Q0ZC0yNTEzLTRlNjMtODkwOS02YmQwMWQyYjNiMWEuanBnIiwid2lkdGgiOiI8PTE5MjAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.qunhcLD8O8sgqpkdKtE3zH3Osqdk80QEKIbWvInbZrE";
                     }}
                   />
 
