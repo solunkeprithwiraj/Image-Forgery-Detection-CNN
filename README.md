@@ -1,136 +1,86 @@
-# Image Forgery Detection with CNN
+# :mortar_board: Image Forgery Detection with CNNs
 
-This project implements an advanced CNN-based approach for image forgery detection, building upon the original work by Y. Rao et al. The improved model incorporates state-of-the-art techniques to enhance accuracy, robustness, and generalization.
+In this project, we used [pytorch](https://pytorch.org/) in order to implement a Convolutional Neural Network (CNN) for the purpose of extracting features in the problem of image forgery detection. This approach is inspired by the work of Y. Rao et al. [A Deep Learning Approach to Detection of Splicing and Copy-Move Forgeries in Images](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=7823911). Following the feature fusion, proposed in the same paper, we take the extracted features and give them as input to an SVM that performs the final binary classification task. The SVM implementation was taken from [scikit-learn](https://scikit-learn.org/stable/). The datasets used in this project are the [CASIA2](https://www.kaggle.com/sophatvathana/casia-dataset) and the [NC2016](https://www.nist.gov/itl/iad/mig/media-forensics-challenge) datasets. This study was conducted as a final project of TU Delft's course CS4180 Deep Learning 2019 by Group 10.
 
-## Overview
+## :scroll: System Overview
 
-Image forgery detection is a critical task in digital forensics. This project focuses on detecting image manipulations using deep learning techniques. The implementation includes:
+The pipeline of the system is:
 
-- A Convolutional Neural Network (CNN) architecture optimized for forgery detection
-- Advanced feature extraction and fusion techniques
-- Sophisticated classification methods including XGBoost
-- Comprehensive evaluation metrics
+1. Train the CNN with image patches close to the distribution of the images that the network will work on. The training patches contain both tampered and untampered regions from the corresponding images.
+2. Extract features from unseen images by breaking them into patches and applying feature fusion after the final convolutional layer of the network.
+3. Use an SVM classifier on the 400 extracted features of the previous step for the final classification.
 
-## Quick Start
+The high-level pipeline is shown in the following image:
 
-### Prerequisites
+<p align="center">
+  <img src="https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/blob/master/reports/images/pipeline.png" height="111" width="600">
+</p>
 
-- Python 3.7+
-- PyTorch 1.7+
-- scikit-learn
-- XGBoost
-- NumPy, Pandas, Matplotlib
+## :triangular_ruler: Network Architecture
 
-### Installation
+The CNN architecture of this project is shown in the image below and is influenced by the [work](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=7823911) of Y. Rao et al. The network structure is 2 convolutions, max pooling, 4 convolutions, max pooling and then 3 convolutions. In the training phase, after the final convolution, a fully connected layer with softmax is applied. In the testing phase, the 400-D output of the final convolutional layer is used in the next **Feature Fusion** step that creates the feature vectors.
 
-Install all required dependencies:
+<p align="center">
+  <img src="https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/blob/master/reports/images/network.png" height="331" width="850">
+</p>
 
-```bash
-.\install_dependencies.bat
-```
+## :barber: Feature Fusion
 
-### Running the Model
+In order to create a feature representation of an image during the test phase, _k_ patches are extracted and passed through the network. After this procedure, _k_ 400-D feature maps are being exported. These feature maps are fused into one feature vector for each image either using max or mean fusion.
 
-1. **Run the Full Improved Model Demo**:
+## :flags: Classification with SVM
 
-```bash
-.\run_improved_model.bat
-```
+For the final part of the pipeline an SVM classifier is trained and tested using the 400-D representations from the previous step. In particular, we use stratified 10-fold cross-validation to obtain an unbiased error estimate.
 
-2. **Run the Minimal Demo** (demonstrates the improved CNN architecture):
+## :bar_chart: Results
 
-```bash
-.\run_minimal_demo.bat
-```
+The accuracy and cross-entropy loss per epoch during the CNN training for the two datasets is shown below:
 
-3. **Run the XGBoost Demo** (demonstrates proper XGBoost configuration):
+<p align="center">
+  <img src="https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/blob/master/reports/images/accuracy_augmented.png" height="300" width="400">
+  <img src="https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/blob/master/reports/images/loss_augmented.png" height="300" width="400">
+</p>
 
-```bash
-.\run_xgboost_demo.bat
-```
+The SVM classification accuracy on both datasets after the 10-fold cross-validation is presented in the table below:
 
-## Project Structure
+| Dataset | Accuracy       |
+| ------- | -------------- |
+| CASIA2  | 96.82% ± 1.19% |
+| NC2016  | 84.89% ± 6.06% |
 
-- `src/` - Source code directory
-  - `cnn/` - CNN implementation
-  - `feature_fusion/` - Feature fusion techniques
-  - `classification/` - Classification methods
-  - Various demo scripts
-- `data/` - Data directory
-- `IMPROVED_MODEL.md` - Detailed documentation of the improvements
-- `IMPROVED_README.md` - Extended documentation with technical details
+For more detailed information feel free to take a look at our project [report](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/blob/master/reports/Group_10-Image_Forgery_Detection_report.pdf).
 
-## Key Improvements
+## :office: Project Structure [![Codacy Badge](https://api.codacy.com/project/badge/Grade/6913244456df4b9eadf8cae2a34b2e48)](https://www.codacy.com/app/kPsarakis/Image-Forgery-Detection-CNN?utm_source=github.com&utm_medium=referral&utm_content=kPsarakis/Image-Forgery-Detection-CNN&utm_campaign=Badge_Grade)
 
-1. **Enhanced CNN Architecture**
+The structure of the project is:
 
-   - Residual connections
-   - Attention mechanisms
-   - Batch normalization
-   - Adaptive pooling
+- [`data`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/data) Here lay all the data files related to the project. The CASIA2 and NC16 folders are empty because GitHub does not allow files of such size.
 
-2. **Advanced Feature Fusion**
+  - [`output`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/data/output) In this folder we have all the outputs of the pipeline.
+    - [`accuracy`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/data/output/accuracy) CSVs containing the accuracy per epoch in all our runs.
+    - [`features`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/data/output/features) CSVs containing the final feature representations of every image after the feature fusion part. To minimize the repo size we only maintained two feature files (one per dataset) as an example.
+    - [`loss_function`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/data/output/loss_function) CSVs containing the loss per epoch in all our runs.
+    - [`pre_trained_cnn`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/data/output/pre_trained_cnn) Pt files that contain the trained CNNs of all our runs.
 
-   - Multiple fusion strategies
-   - Spatial pyramid pooling
+- [`reports`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/reports) Final report of the project that contains more details on the implementation.
 
-3. **Sophisticated Classification**
+- [`src`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/src) Source folder of the project. Here we give examples on how to run every part of the pipeline.
 
-   - Ensemble methods
-   - XGBoost with best practices
-   - Imbalanced data handling
+  - [`classification`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/src/classification) Folder containing the SVM code.
+  - [`cnn`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/src/cnn) Folder containing the CNN code.
+  - [`feature_fusion`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/src/feature_fusion) Folder containing the code used for the feature fusion.
+  - [`patch_extraction`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/src/patch_extraction) Folder containing the code used for the patch extraction.
+  - [`plots`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/src/plots) Folder containing the code used for the plots that we generated.
 
-4. **Modern Training Techniques**
-   - Mixed precision training
-   - Advanced learning rate scheduling
+- [`website`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/website) Web application for the project.
+  - [`app.py`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/website/app.py) Main Flask application.
+  - [`templates`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/website/templates) HTML templates for the website.
+  - [`static`](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN/tree/master/website/static) Static files for the website (CSS, JS, images).
 
-## Performance
+## :busts_in_silhouette: Team Members
 
-The improved model achieves significantly better performance compared to the original model, with expected accuracy improvements of approximately 2% and enhanced robustness to various forgery types.
+[Prithwiraj Solunke](https://github.com/solunkeprithwiraj)
 
-## Documentation
+[Omkar Kharmare](https://github.com/omkarkharmare)
 
-For more detailed information:
-
-- See [IMPROVED_README.md](IMPROVED_README.md) for technical details
-- See [IMPROVED_MODEL.md](IMPROVED_MODEL.md) for in-depth explanation of improvements
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Y. Rao et al. for the original work on CNN-based image forgery detection
-- The PyTorch team for their excellent deep learning framework
-- The XGBoost team for their powerful gradient boosting implementation
-
-## Test Results
-
-The model was tested on a diverse set of images from the CASIA2 dataset, achieving an accuracy of 100% on the test set. The system correctly identified both tampered and authentic images with high confidence.
-
-![Test Results](reports/casia2_forgery_detection_report_20250315_220137.png)
-
-To generate your own test report:
-
-```
-.\generate_report.bat
-```
-
-## Model Architecture
-
-The CNN architecture includes:
-
-- Convolutional layers for feature extraction
-- Residual connections for better gradient flow
-- Attention mechanisms to focus on important features
-- SVM classifier for final decision making
-
-## Tampering Localization
-
-The system can localize tampered regions in an image using a sliding window approach:
-
-1. The image is divided into overlapping patches
-2. Each patch is analyzed by the CNN model
-3. A heatmap is generated showing the probability of tampering
-4. Contours are drawn around regions with high tampering probability
+[Gaurav Ghadage](https://github.com/gauravghadage)
