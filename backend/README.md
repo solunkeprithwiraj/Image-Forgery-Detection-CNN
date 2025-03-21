@@ -13,8 +13,6 @@ A modern, responsive web application that integrates with the Image Forgery Dete
 ## Technologies Used
 
 - **Backend**: Flask (Python)
-- **Frontend**: HTML5, CSS3, JavaScript
-- **CSS Framework**: Bootstrap 5
 - **Icons**: Font Awesome
 - **Machine Learning**: PyTorch, scikit-learn
 
