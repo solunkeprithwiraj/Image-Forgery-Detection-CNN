@@ -118,9 +118,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
   );
 
   // Track image loading errors
-  const [imageLoadError, setImageLoadError] = useState<Record<string, boolean>>(
-    {}
-  );
+  const [imageLoadError] = useState<Record<string, boolean>>({});
 
   // Update active tab when available visualizations change
   useEffect(() => {
@@ -245,18 +243,9 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
   // Function to check parent directory contents
   const checkDirectoryContents = async () => {
     try {
-      // Get the directory where the image should be
-      const directory = "uploads";
-
-      const response = await fetch(
-        `${apiBaseUrl}/api/list-directory?path=${encodeURIComponent(directory)}`
-      );
-
+      const response = await fetch(`${apiBaseUrl}/api/list-directory`);
       if (!response.ok) {
-        console.error(
-          `Server returned ${response.status}: ${response.statusText}`
-        );
-        alert(`Failed to list directory: ${response.statusText}`);
+        console.error("Failed to list directory:", response.statusText);
         return;
       }
 
@@ -265,7 +254,11 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
       alert(`Found ${data.files.length} files in uploads directory`);
     } catch (error) {
       console.error("Error listing directory:", error);
-      alert(`Error: ${error.message}`);
+      if (error instanceof Error) {
+        alert(`Error: ${error.message}`);
+      } else {
+        alert("An unknown error occurred");
+      }
     }
   };
 
@@ -434,7 +427,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
                   src={formatImageUrl(activeVisualizationPath)}
                   alt={`${visualizationLabels[activeTab]} visualization of the image analysis`}
                   className="w-full h-auto object-contain bg-gray-100 dark:bg-gray-800 max-h-[300px]"
-                  onError={async (e) => {
+                  onError={async () => {
                     // Log the error
                     console.error(
                       `Failed to load image: ${activeVisualizationPath}`
@@ -447,9 +440,6 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
                     console.log(
                       `Image ${activeVisualizationPath} exists: ${exists}`
                     );
-
-                    // Update the error state
-                    setImageLoadError({ ...imageLoadError, [activeTab]: true });
                   }}
                 />
                 {imageLoadError[activeTab] && (

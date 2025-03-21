@@ -1,33 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaSun, FaMoon, FaBars, FaTimes } from "react-icons/fa";
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  darkMode: boolean;
+  toggleDarkMode: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return (
-      localStorage.getItem("theme") === "dark" ||
-      (!localStorage.getItem("theme") &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches)
-    );
-  });
   const location = useLocation();
-
-  // Update the document class when dark mode changes
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [isDarkMode]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -97,10 +80,10 @@ const Header: React.FC = () => {
               onClick={toggleDarkMode}
               className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition duration-200"
               aria-label={
-                isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+                darkMode ? "Switch to light mode" : "Switch to dark mode"
               }
             >
-              {isDarkMode ? (
+              {darkMode ? (
                 <FaSun className="w-5 h-5" />
               ) : (
                 <FaMoon className="w-5 h-5" />
@@ -114,10 +97,10 @@ const Header: React.FC = () => {
               onClick={toggleDarkMode}
               className="p-2 mr-2 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition duration-200"
               aria-label={
-                isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+                darkMode ? "Switch to light mode" : "Switch to dark mode"
               }
             >
-              {isDarkMode ? (
+              {darkMode ? (
                 <FaSun className="w-5 h-5" />
               ) : (
                 <FaMoon className="w-5 h-5" />

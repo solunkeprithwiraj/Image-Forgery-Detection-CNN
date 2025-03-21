@@ -8,7 +8,6 @@ import {
   FaLayerGroup,
   FaSearchLocation,
   FaBrain,
-  FaSlidersH,
 } from "react-icons/fa";
 import AnalysisResult from "../components/ui/AnalysisResult";
 import {
@@ -39,7 +38,7 @@ const Detect: React.FC = () => {
     error: uploadError,
   } = useImageUpload({
     maxSizeInMB: 10,
-    onImageSelected: (file) => {
+    onImageSelected: () => {
       // Clear any previous errors when a new image is selected
       setError(null);
     },
