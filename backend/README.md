@@ -76,7 +76,6 @@ The model achieves the following accuracy on test datasets:
 This website integrates the Image Forgery Detection CNN model developed by:
 
 - Prithwiraj Solunke
-- Omkar Kharmare
-- Gaurav Ghadage
+- Pratik Wayal
 
 Original repository: [Image-Forgery-Detection-CNN](https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN)
