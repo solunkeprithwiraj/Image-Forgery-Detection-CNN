@@ -2,16 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
 
-// Add Vite env type declaration
-declare global {
-  interface ImportMeta {
-    env: {
-      VITE_APP_AUTHOR_LINKEDIN?: string;
-      [key: string]: any;
-    };
-  }
-}
-
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
