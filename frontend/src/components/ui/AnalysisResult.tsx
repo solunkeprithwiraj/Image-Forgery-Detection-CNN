@@ -76,12 +76,12 @@ interface AnalysisResult {
 
 interface AnalysisResultProps {
   result: AnalysisResult;
-  apiBaseUrl: string;
+  apiBaseUrl?: string;
 }
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({
   result,
-  apiBaseUrl,
+  apiBaseUrl = "",
 }) => {
   // Determine which visualizations are available
   const getAvailableVisualizations = (): VisualizationType[] => {
@@ -157,58 +157,29 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
 
   const activeVisualizationPath = getActiveVisualizationPath();
 
-  // Format the image URL
+  // Function to format image paths
   const formatImageUrl = (path: string): string => {
     if (!path) return "";
 
     // Replace backslashes with forward slashes for URL compatibility
     const normalizedPath = path.replace(/\\/g, "/");
 
-    // Handle TIFF files
-    if (
-      normalizedPath.toLowerCase().endsWith(".tif") ||
-      normalizedPath.toLowerCase().endsWith(".tiff")
-    ) {
-      console.log("Converting TIFF file for browser display:", normalizedPath);
-
-      // Remove any leading slashes to prevent double slashes in URL
-      let cleanPath = normalizedPath;
-      if (cleanPath.startsWith("/")) {
-        cleanPath = cleanPath.substring(1);
-      }
-
-      // Remove /static/ prefix if present to avoid path duplication
-      if (cleanPath.startsWith("static/")) {
-        cleanPath = cleanPath.substring(7);
-      }
-
-      return `${apiBaseUrl}/api/view-tiff/${cleanPath}`;
-    }
-
-    // Handle other files
+    // Check if the path already starts with http:// or https://
     if (normalizedPath.startsWith("http")) {
       return normalizedPath;
     }
 
-    // If the path already contains /static/ or starts with /static/
-    if (
-      normalizedPath.includes("/static/") ||
-      normalizedPath.startsWith("/static/")
-    ) {
-      // Make sure we have the full URL with apiBaseUrl
-      const staticPath = normalizedPath.includes("/static/")
-        ? normalizedPath
-        : normalizedPath.replace("/static", "");
-      return `${apiBaseUrl}${staticPath}`;
-    }
-
-    // For paths that don't have /static/ but might start with /
-    if (normalizedPath.startsWith("/")) {
+    // Handle paths from our Flask backend that start with /uploads or /outputs
+    if (normalizedPath.startsWith("/uploads/") || normalizedPath.startsWith("/outputs/")) {
       return `${apiBaseUrl}${normalizedPath}`;
     }
 
-    // For paths with no leading slash, add the /static/ prefix
-    return `${apiBaseUrl}/static/${normalizedPath}`;
+    // Default case
+    if (normalizedPath.startsWith("/")) {
+      return `${apiBaseUrl}${normalizedPath}`;
+    } else {
+      return `${apiBaseUrl}/${normalizedPath}`;
+    }
   };
 
   // Function to check if an image exists

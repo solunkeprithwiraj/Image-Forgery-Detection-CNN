@@ -1,217 +1,129 @@
-# Image Forgery Detection using CNN
+# Image Tampering Detection System
 
-This project implements image forgery detection using Convolutional Neural Networks (CNN) and other machine learning techniques to identify manipulated images.
+This project provides a web-based system for detecting image tampering using deep learning. It consists of a Flask backend that uses pre-trained CNN and SVM models to analyze images, and a React frontend that provides a user-friendly interface.
 
-## Project Structure
+## System Architecture
 
+- **Backend**: Flask application with pre-trained PyTorch models
+- **Frontend**: React application with TypeScript and Tailwind CSS
+- **Models**: Pre-trained CNN and SVM models for image tampering detection
+
+## Features
+
+- Upload and analyze images to detect tampering
+- Ensemble model analysis for higher accuracy
+- Visual localization of tampered regions using various methods
+- Support for multiple image formats including TIFF files
+- Detailed analysis results with confidence scores
+
+## Prerequisites
+
+- Python 3.8+
+- Node.js 16+
+- Docker (optional)
+
+## Setup and Running
+
+### Option 1: Using Docker (Recommended)
+
+The easiest way to run the application is using Docker and Docker Compose:
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd image-tampering-detection
+
+# Start the application using Docker Compose
+docker-compose up
 ```
-├── configs/               # Configuration files
-│   └── model_config.py    # Model parameters and settings
-├── data/                  # Data directory
-│   ├── raw/               # Original, immutable data
-│   ├── processed/         # Cleaned and processed data ready for modeling
-│   ├── interim/           # Intermediate data
-│   └── external/          # External data sources
-├── docs/                  # Documentation
-│   ├── images/            # Images for documentation
-│   └── plots/             # Generated plots and visualizations
-├── models/                # Model implementations
-│   └── weights/           # Saved model weights
-├── scripts/               # Utility scripts
-│   ├── minimal_demo.py    # Minimal demo script
-│   ├── run_improved_model.py # Improved model runner
-│   └── ...                # Other scripts
-├── tests/                 # Tests
-│   ├── test_models.py     # Model tests
-│   └── generate_test_report.py # Test report generator
-├── utils/                 # Utility functions
-│   ├── common.py          # Common utility functions
-│   ├── feature_extraction.py # Feature extraction utilities
-│   └── extract_patches.py # Image patch extraction utilities
-├── backend/               # Backend server implementation
-│   └── app.py             # Flask API
-└── react-frontend/        # React frontend application
-    └── src/               # Frontend source code
+
+This will start both the backend server on port 5000 and the frontend on port 3000.
+
+### Option 2: Manual Setup
+
+#### Backend Setup
+
+1. Navigate to the backend directory:
+```bash
+cd backend
 ```
 
-## Installation
+2. Create a virtual environment:
+```bash
+python -m venv .venv
+```
 
-Install dependencies:
+3. Activate the virtual environment:
+   - Windows:
+   ```bash
+   .venv\Scripts\activate
+   ```
+   - macOS/Linux:
+   ```bash
+   source .venv/bin/activate
+   ```
 
+4. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-For the frontend:
-
+5. Run the Flask application:
 ```bash
-cd react-frontend
+python run.py
+```
+
+#### Frontend Setup
+
+1. Navigate to the frontend directory:
+```bash
+cd frontend
+```
+
+2. Install dependencies:
+```bash
 npm install
+```
+
+3. Start the development server:
+```bash
+npm run dev
 ```
 
 ## Usage
 
-### Running the Models
-
-```bash
-python scripts/run_improved_model.py
-```
-
-### Running the Backend Server
-
-```bash
-cd backend
-python app.py
-```
-
-### Running the Frontend
-
-```bash
-cd react-frontend
-npm run dev
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
-
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
-
-## Overview
-
-Image forgery detection is a critical task in digital forensics. This project focuses on detecting image manipulations using deep learning techniques. The implementation includes:
-
-- A Convolutional Neural Network (CNN) architecture optimized for forgery detection
-- Advanced feature extraction and fusion techniques
-- Sophisticated classification methods including XGBoost
-- Comprehensive evaluation metrics
-
-## Quick Start
-
-### Prerequisites
-
-- Python 3.7+
-- PyTorch 1.7+
-- scikit-learn
-- XGBoost
-- NumPy, Pandas, Matplotlib
-
-### Installation
-
-Install all required dependencies:
-
-```bash
-.\install_dependencies.bat
-```
-
-### Running the Model
-
-1. **Run the Full Improved Model Demo**:
-
-```bash
-.\run_improved_model.bat
-```
-
-2. **Run the Minimal Demo** (demonstrates the improved CNN architecture):
-
-```bash
-.\run_minimal_demo.bat
-```
-
-3. **Run the XGBoost Demo** (demonstrates proper XGBoost configuration):
-
-```bash
-.\run_xgboost_demo.bat
-```
+1. Open your browser and navigate to http://localhost:3000
+2. Click on "Detect" in the navigation menu
+3. Upload an image for analysis
+4. View the analysis results including:
+   - Tampering detection result
+   - Confidence score
+   - Visualization of tampered regions
+   - Ensemble model results (optional)
 
 ## Project Structure
 
-- `src/` - Source code directory
-  - `cnn/` - CNN implementation
-  - `feature_fusion/` - Feature fusion techniques
-  - `classification/` - Classification methods
-  - Various demo scripts
-- `data/` - Data directory
-- `IMPROVED_MODEL.md` - Detailed documentation of the improvements
-- `IMPROVED_README.md` - Extended documentation with technical details
-
-## Key Improvements
-
-1. **Enhanced CNN Architecture**
-
-   - Residual connections
-   - Attention mechanisms
-   - Batch normalization
-   - Adaptive pooling
-
-2. **Advanced Feature Fusion**
-
-   - Multiple fusion strategies
-   - Spatial pyramid pooling
-
-3. **Sophisticated Classification**
-
-   - Ensemble methods
-   - XGBoost with best practices
-   - Imbalanced data handling
-
-4. **Modern Training Techniques**
-   - Mixed precision training
-   - Advanced learning rate scheduling
-
-## Performance
-
-The improved model achieves significantly better performance compared to the original model, with expected accuracy improvements of approximately 2% and enhanced robustness to various forgery types.
-
-## Documentation
-
-For more detailed information:
-
-- See [IMPROVED_README.md](IMPROVED_README.md) for technical details
-- See [IMPROVED_MODEL.md](IMPROVED_MODEL.md) for in-depth explanation of improvements
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Y. Rao et al. for the original work on CNN-based image forgery detection
-- The PyTorch team for their excellent deep learning framework
-- The XGBoost team for their powerful gradient boosting implementation
-
-## Test Results
-
-The model was tested on a diverse set of images from the CASIA2 dataset, achieving an accuracy of 100% on the test set. The system correctly identified both tampered and authentic images with high confidence.
-
-![Test Results](reports/casia2_forgery_detection_report_20250315_220137.png)
-
-To generate your own test report:
-
 ```
-.\generate_report.bat
+.
+├── backend/                # Flask backend
+│   ├── app.py              # Main Flask application
+│   ├── models/             # Model definitions
+│   ├── data/               # Data directory
+│   │   └── output/         # Pre-trained models
+│   ├── uploads/            # Uploaded images directory
+│   └── outputs/            # Output images directory
+├── frontend/               # React frontend
+│   ├── src/                # Source code
+│   │   ├── components/     # React components
+│   │   ├── pages/          # Page components
+│   │   └── services/       # API services
+│   └── public/             # Static files
+└── docker-compose.yml      # Docker Compose configuration
 ```
 
-## Model Architecture
+## API Endpoints
 
-The CNN architecture includes:
-
-- Convolutional layers for feature extraction
-- Residual connections for better gradient flow
-- Attention mechanisms to focus on important features
-- SVM classifier for final decision making
-
-## Tampering Localization
-
-The system can localize tampered regions in an image using a sliding window approach:
-
-1. The image is divided into overlapping patches
-2. Each patch is analyzed by the CNN model
-3. A heatmap is generated showing the probability of tampering
-4. Contours are drawn around regions with high tampering probability
+- `POST /api/analyze`: Analyze an image using a single model
+- `POST /api/analyze/ensemble`: Analyze an image using an ensemble of models
+- `POST /api/convert-tiff`: Convert a TIFF image to JPEG
+- `GET /api/view-tiff/<path>`: View a TIFF image as JPEG 

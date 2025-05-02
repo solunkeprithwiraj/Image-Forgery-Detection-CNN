@@ -52,6 +52,7 @@ const Detect: React.FC = () => {
 
     setError(null);
     setIsProcessing(true);
+    setResult(null);
 
     try {
       // Request all visualization types - the user will select which ones to view on the results page
@@ -83,12 +84,17 @@ const Detect: React.FC = () => {
         );
       }
 
+      console.log("API Response:", result);
       setResult(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error analyzing image:", err);
       setError(
-        "An error occurred while analyzing the image. Please try again."
+        err.message || "An error occurred while analyzing the image. Please try again."
       );
+      // Show more detailed error information in the console
+      if (err.response) {
+        console.error("Server response:", err.response.data);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -347,10 +353,13 @@ const Detect: React.FC = () => {
               </>
             ) : (
               <>
-                <AnalysisResult
-                  result={result}
-                  apiBaseUrl={"http://localhost:5000"}
-                />
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <AnalysisResult result={result} apiBaseUrl="" />
+                </motion.div>
 
                 <div className="mt-8 flex justify-center">
                   <motion.button

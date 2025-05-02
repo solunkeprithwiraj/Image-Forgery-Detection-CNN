@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// Get the API URL from environment variables
-const API_BASE_URL = "http://localhost:5000";
+// Get the API URL from environment variables or use the default
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 // Create an axios instance with default config
 const api = axios.create({
@@ -31,6 +31,18 @@ export interface AnalysisResult {
     authentic_votes: number;
     consensus_level: string;
     model_predictions: any[];
+  };
+}
+
+export interface ElaResult {
+  message: string;
+  method: string;
+  timestamp: string;
+  input_image_path: string;
+  ela_path: string;
+  parameters: {
+    quality: number;
+    scale: number;
   };
 }
 
@@ -115,6 +127,34 @@ export const analyzeImageEnsemble = async (
     if (axios.isAxiosError(error) && error.response) {
       throw new Error(
         `Ensemble analysis failed: ${
+          error.response.data.error || "Unknown error"
+        }`
+      );
+    }
+    throw new Error("Failed to connect to the server. Please try again later.");
+  }
+};
+
+export const analyzeImageEla = async (
+  imageFile: File,
+  quality: number = 90,
+  scale: number = 15
+): Promise<ElaResult> => {
+  try {
+    const formData = new FormData();
+    formData.append("file", imageFile);
+    formData.append("quality", quality.toString());
+    formData.append("scale", scale.toString());
+
+    const response = await api.post<ElaResult>(
+      "/api/analyze/ela",
+      formData
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(
+        `ELA analysis failed: ${
           error.response.data.error || "Unknown error"
         }`
       );
