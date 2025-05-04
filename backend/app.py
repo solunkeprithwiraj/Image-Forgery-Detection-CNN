@@ -795,10 +795,11 @@ def analyze_batch():
                 continue
             
             # Use the appropriate model based on user request
-            if use_ensemble and ensemble_models is None:
-                # Load ensemble models if needed
+            if use_ensemble:
                 global ensemble_models
-                ensemble_models = load_ensemble_models()
+                if ensemble_models is None:
+                    # Load ensemble models if needed
+                    ensemble_models = load_ensemble_models()
             
             if use_ensemble and ensemble_models:
                 # Analyze with ensemble of models
