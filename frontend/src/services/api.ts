@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Get the API URL from environment variables
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "http://localhost:8000";
 
 // Create an axios instance with default config
 const api = axios.create({
@@ -68,7 +68,8 @@ export const analyzeImage = async (
       });
     }
 
-    const response = await api.post<AnalysisResult>("/api/analyze", formData);
+    // const response = await api.post<AnalysisResult>("/api/analyze", formData);
+    const response = await api.post<AnalysisResult>("/api/predict/", formData);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {

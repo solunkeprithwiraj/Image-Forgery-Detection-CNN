@@ -13,6 +13,7 @@ import {
   FaBorderAll,
   FaBrain,
 } from "react-icons/fa";
+import dayjs from "dayjs";
 
 // Define visualization types that might be available
 type VisualizationType =
@@ -49,6 +50,7 @@ const visualizationLabels: Record<VisualizationType, string> = {
 // Define the result structure
 interface AnalysisResult {
   is_tampered: boolean;
+  prediction: number; 
   confidence: number;
   message: string;
   method: string;
@@ -83,6 +85,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
   result,
   apiBaseUrl,
 }) => {
+
   // Determine which visualizations are available
   const getAvailableVisualizations = (): VisualizationType[] => {
     const visualizations: VisualizationType[] = [];
@@ -314,7 +317,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
     >
       {/* Result Header */}
       <motion.div className="flex items-center mb-6" variants={itemVariants}>
-        {result.is_tampered ? (
+        {result.prediction == 1 ? (
           <div className="flex items-center text-red-500 dark:text-red-400">
             <FaExclamationTriangle className="text-3xl mr-3" />
             <h2 className="text-2xl font-bold">Manipulation Detected</h2>
@@ -515,17 +518,17 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
               <strong>Confidence Score:</strong>{" "}
-              {Math.round(result.confidence * 100)}%
+              {(result.confidence * 100).toFixed(2)}%
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
               <strong>Image Status:</strong>{" "}
-              {result.is_tampered ? "Manipulated" : "Authentic"}
+              {result.prediction == 1 ? "Manipulated" : "Authentic"}
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               <strong>Analysis Date:</strong>{" "}
-              {new Date(result.timestamp).toLocaleString()}
+              {dayjs().format("YYYY-MM-DD")}
             </p>
           </div>
         </div>

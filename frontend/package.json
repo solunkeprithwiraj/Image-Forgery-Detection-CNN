@@ -11,13 +11,15 @@
   },
   "dependencies": {
     "axios": "^1.6.2",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
     "framer-motion": "^10.16.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.3.8",
     "react-icons": "^4.12.0",
-    "react-router-dom": "^6.20.0"
+    "react-router-dom": "^6.20.0",
+    "three": "^0.177.0"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.10",

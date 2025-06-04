@@ -1,6 +1,7 @@
-import React from "react";
+
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+
 import {
   FaArrowRight,
   FaCheckCircle,
@@ -9,8 +10,11 @@ import {
   FaRegLightbulb,
   FaBrain,
 } from "react-icons/fa";
+import ThreeDModel from "../components/3D_Model/3DModel";
 
-const Home: React.FC = () => {
+
+
+const Home = () => {
   return (
     <>
       {/* Hero Section */}
@@ -72,33 +76,24 @@ const Home: React.FC = () => {
               className="relative"
             >
               <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-xl">
-                <div className="rounded-lg overflow-hidden relative aspect-[4/3] bg-gray-100 dark:bg-gray-700">
-                  <img
-                    src="/demo-image.jpg"
-                    alt="Image analysis visualization"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/cd6602ef-6f54-4a73-9570-2ef752696cf1/dejiebx-5a7f7d4d-2513-4e63-8909-6bd01d2b3b1a.jpg/v1/fill/w_1920,h_1280,q_75,strp/photoshop_manipulation_fish_by_furkankadran_dejiebx-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTI4MCIsInBhdGgiOiJcL2ZcL2NkNjYwMmVmLTZmNTQtNGE3My05NTcwLTJlZjc1MjY5NmNmMVwvZGVqaWVieC01YTdmN2Q0ZC0yNTEzLTRlNjMtODkwOS02YmQwMWQyYjNiMWEuanBnIiwid2lkdGgiOiI8PTE5MjAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.qunhcLD8O8sgqpkdKtE3zH3Osqdk80QEKIbWvInbZrE";
-                    }}
-                  />
+                <div className="rounded-lg overflow-hidden relative aspect-[4/3]">
+                  <ThreeDModel />
 
-                  <div className="absolute top-3 right-3 bg-red-600/80 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
-                    Tampered
+                  <div className="absolute top-3 right-3 bg-green-600/80 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
+                    AI Active
                   </div>
                 </div>
 
                 <div className="mt-4 p-2">
-                  <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-800 mb-4">
+                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-100 dark:border-green-800 mb-4">
                     <div className="flex items-start">
-                      <FaCheckCircle className="text-red-600 dark:text-red-400 mt-0.5 mr-3 flex-shrink-0" />
+                      <FaCheckCircle className="text-green-600 dark:text-green-400 mt-0.5 mr-3 flex-shrink-0" />
                       <div>
-                        <h4 className="font-medium text-red-900 dark:text-red-300">
-                          Manipulation Detected
+                        <h4 className="font-medium text-green-900 dark:text-green-300">
+                          Neural Network Active
                         </h4>
-                        <p className="text-red-700 dark:text-red-400 text-sm">
-                          This image shows signs of tampering in the highlighted
-                          regions.
+                        <p className="text-green-700 dark:text-green-400 text-sm">
+                          Advanced AI model ready to analyze image authenticity.
                         </p>
                       </div>
                     </div>
@@ -106,16 +101,16 @@ const Home: React.FC = () => {
 
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      Confidence Score
+                      Model Confidence
                     </span>
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      94%
+                      98%
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1 mb-4">
                     <div
-                      className="bg-red-600 h-2 rounded-full"
-                      style={{ width: "94%" }}
+                      className="bg-green-600 h-2 rounded-full"
+                      style={{ width: "98%" }}
                     ></div>
                   </div>
                 </div>
@@ -133,10 +128,10 @@ const Home: React.FC = () => {
                   </div>
                   <div>
                     <div className="font-medium text-gray-900 dark:text-white">
-                      94% Accurate
+                      98% Accurate
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Based on analysis
+                      Real-time analysis
                     </div>
                   </div>
                 </div>
@@ -154,10 +149,10 @@ const Home: React.FC = () => {
                   </div>
                   <div>
                     <div className="font-medium text-gray-900 dark:text-white">
-                      CNN Technology
+                      Deep Learning
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Advanced AI detection
+                      Neural network AI
                     </div>
                   </div>
                 </div>

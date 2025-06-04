@@ -65,25 +65,26 @@ const Detect: React.FC = () => {
       ];
 
       let result;
-      if (useEnsemble) {
-        // Use ensemble approach with multiple models
-        result = await analyzeImageEnsemble(
-          file,
-          showLocalization,
-          showEla,
-          showLocalization ? allVisualizationMethods : []
-        );
-      } else {
-        // Use single model approach
+      // if (useEnsemble) {
+      //   // Use ensemble approach with multiple models
+      //   result = await analyzeImageEnsemble(
+      //     file,
+      //     showLocalization,
+      //     showEla,
+      //     showLocalization ? allVisualizationMethods : []
+      //   );
+      // } else {
+      //   // Use single model approach
         result = await analyzeImage(
           file,
           showLocalization,
           showEla,
           showLocalization ? allVisualizationMethods : []
         );
-      }
+      // }
 
       setResult(result);
+      console.log("result", result)
     } catch (err) {
       console.error("Error analyzing image:", err);
       setError(
@@ -201,7 +202,7 @@ const Detect: React.FC = () => {
                     </div>
                   </div>
 
-                  {useEnsemble && (
+                  {/* {useEnsemble && (
                     <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-start">
                         <FaBrain className="text-primary-500 dark:text-primary-400 mt-1 mr-2 flex-shrink-0" />
@@ -212,7 +213,7 @@ const Detect: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 <div className="w-full">
@@ -349,7 +350,7 @@ const Detect: React.FC = () => {
               <>
                 <AnalysisResult
                   result={result}
-                  apiBaseUrl={"http://localhost:5000"}
+                  apiBaseUrl={"http://localhost:8000"}
                 />
 
                 <div className="mt-8 flex justify-center">
