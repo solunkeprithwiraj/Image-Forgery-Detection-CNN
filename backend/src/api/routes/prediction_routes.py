@@ -1,13 +1,18 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends , Depends, HTTPException, UploadFile, File
 from typing import List
 import os
 import shutil
 from tempfile import NamedTemporaryFile
-from concurrent.futures import ThreadPoolExecutor
-from src.api.models.models import PredictionResult, MultiPredictionResult
 from src.api.services.prediction_service import predict_image
 from src.api.utils.logger import logger
 from src.api.utils.dependencies import inject_models
+import os
+from fastapi.responses import StreamingResponse
+from src.api.routes.prediction_routes import router as prediction_router
+from PIL import Image
+from src.api.services.ela import generate_ela_image
+from src.api.utils.logger import setup_logger
+import io
 
 # Create router
 router = APIRouter()
@@ -153,3 +158,19 @@ async def test_all_images(models: dict = Depends(inject_models)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/api/ela")
+async def perform_ela(image: UploadFile = File(...)):
+    # Read and open the image
+    image_data = await image.read()
+    original_image = Image.open(io.BytesIO(image_data))
+
+    # Generate ELA
+    ela_image = generate_ela_image(original_image)
+
+    # Prepare response
+    buffer = io.BytesIO()
+    ela_image.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    return StreamingResponse(buffer, media_type="image/png")

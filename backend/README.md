@@ -61,13 +61,3 @@ The structure of the project is:
     *   [`patch_extraction`](https://github.com/kPsarakis/Image-Forgery-Detection-CNN/tree/master/src/patch_extraction) Folder containing the code used for the patch extraction.
     *   [`plots`](https://github.com/kPsarakis/Image-Forgery-Detection-CNN/tree/master/src/plots) Folder containing the code used for the plots that we generated.
 
-## :busts_in_silhouette: Group 10 Team Members 
-[Achilleas Vlogiaris](https://github.com/achilleasvlogiaris)
-
-[Arkajit Bhattacharya](https://github.com/arkajitb)
-
-[Kyriakos Psarakis](https://github.com/kPsarakis)
-
-[Panagiotis Soilis](https://github.com/psoilis)
-
-[Rafail Skoulos](https://github.com/RafailSkoulos17)

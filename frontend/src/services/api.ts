@@ -41,6 +41,21 @@ export type LocalizationMethod =
   | "mask"
   | "edge"
   | "highlight";
+export const analyzeElaImage = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/ela", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("ELA analysis failed");
+  }
+
+  return await response.json();
+};
 
 export const analyzeImage = async (
   imageFile: File,

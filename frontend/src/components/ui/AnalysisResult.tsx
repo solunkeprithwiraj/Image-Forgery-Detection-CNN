@@ -4,47 +4,22 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaInfoCircle,
-  FaChartArea,
-  FaImage,
-  FaDrawPolygon,
   FaCameraRetro,
-  FaMask,
-  FaHighlighter,
-  FaBorderAll,
   FaBrain,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 
-// Define visualization types that might be available
-type VisualizationType =
-  | "heatmap"
-  | "overlay"
-  | "contour"
-  | "ela"
-  | "mask"
-  | "edge"
-  | "highlight";
+// Define visualization types - now only ELA
+type VisualizationType = "ela";
 
 // Map visualization types to their icons
 const visualizationIcons: Record<VisualizationType, React.ReactNode> = {
-  heatmap: <FaChartArea className="mr-2" />,
-  overlay: <FaImage className="mr-2" />,
-  contour: <FaDrawPolygon className="mr-2" />,
   ela: <FaCameraRetro className="mr-2" />,
-  mask: <FaMask className="mr-2" />,
-  edge: <FaBorderAll className="mr-2" />,
-  highlight: <FaHighlighter className="mr-2" />,
 };
 
 // Map visualization types to their display names
 const visualizationLabels: Record<VisualizationType, string> = {
-  heatmap: "Heatmap",
-  overlay: "Overlay",
-  contour: "Contour",
   ela: "Error Level Analysis",
-  mask: "Mask",
-  edge: "Edge Detection",
-  highlight: "Highlight",
 };
 
 // Define the result structure
@@ -56,13 +31,7 @@ interface AnalysisResult {
   method: string;
   timestamp: string;
   input_image_path: string;
-  heatmap_path?: string;
-  overlay_path?: string;
-  contour_path?: string;
   ela_path?: string;
-  mask_path?: string;
-  edge_path?: string;
-  highlight_path?: string;
   ensemble_detail?: {
     ensemble_size: number;
     tampered_votes: number;
@@ -86,18 +55,10 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
   apiBaseUrl,
 }) => {
 
-  // Determine which visualizations are available
+  // Determine which visualizations are available - now only checks for ELA
   const getAvailableVisualizations = (): VisualizationType[] => {
     const visualizations: VisualizationType[] = [];
-
-    if (result.heatmap_path) visualizations.push("heatmap");
-    if (result.overlay_path) visualizations.push("overlay");
-    if (result.contour_path) visualizations.push("contour");
     if (result.ela_path) visualizations.push("ela");
-    if (result.mask_path) visualizations.push("mask");
-    if (result.edge_path) visualizations.push("edge");
-    if (result.highlight_path) visualizations.push("highlight");
-
     return visualizations;
   };
 
@@ -105,13 +66,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
 
   // Debug logs
   console.log("Available visualization paths:", {
-    heatmap: result.heatmap_path || null,
-    overlay: result.overlay_path || null,
-    contour: result.contour_path || null,
     ela: result.ela_path || null,
-    mask: result.mask_path || null,
-    edge: result.edge_path || null,
-    highlight: result.highlight_path || null,
   });
   console.log("Available visualization types:", availableVisualizations);
 
@@ -137,25 +92,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
   // Get the path for the active visualization
   const getActiveVisualizationPath = (): string | undefined => {
     if (!activeTab) return undefined;
-
-    switch (activeTab) {
-      case "heatmap":
-        return result.heatmap_path;
-      case "overlay":
-        return result.overlay_path;
-      case "contour":
-        return result.contour_path;
-      case "ela":
-        return result.ela_path;
-      case "mask":
-        return result.mask_path;
-      case "edge":
-        return result.edge_path;
-      case "highlight":
-        return result.highlight_path;
-      default:
-        return undefined;
-    }
+    return result.ela_path;
   };
 
   const activeVisualizationPath = getActiveVisualizationPath();
@@ -267,24 +204,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
 
   // Get visualization description
   const getVisualizationDescription = (type: VisualizationType): string => {
-    switch (type) {
-      case "heatmap":
-        return "Shows probability of forgery with color intensity. Red areas are most likely to be tampered with.";
-      case "overlay":
-        return "Combines original with heatmap to highlight tampered regions while preserving the visual context.";
-      case "contour":
-        return "Draws green outlines around specific regions identified as tampered, providing precise localization.";
-      case "ela":
-        return "Error Level Analysis identifies areas with different compression levels, which can indicate manipulation. (For Some images ELA will not be available)";
-      case "mask":
-        return "Highlights tampered areas with a semi-transparent overlay, making it easy to identify affected areas.";
-      case "edge":
-        return "Highlights the boundaries of tampered regions, showing precisely where manipulations occur.";
-      case "highlight":
-        return "Places highlights around tampered regions and displays the percentage of image affected by each manipulation.";
-      default:
-        return "Visualization showing potential regions of image manipulation.";
-    }
+    return "Error Level Analysis identifies areas with different compression levels, which can indicate manipulation. (For some images ELA will not be available)";
   };
 
   // Animation variants
@@ -373,33 +293,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
                 visualization.
               </div>
             )}
-
-            {availableVisualizations.length > 1 && (
-              <div className="text-gray-600 dark:text-gray-400 mb-2">
-                Select a visualization method:
-              </div>
-            )}
           </div>
-
-          {/* Visualization type buttons */}
-          {availableVisualizations.length > 1 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-4">
-              {availableVisualizations.map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setActiveTab(type)}
-                  className={`flex items-center justify-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === type
-                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {visualizationIcons[type]}
-                  {visualizationLabels[type]}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Visualization Image */}

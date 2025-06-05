@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import AnalysisResult from "../components/ui/AnalysisResult";
 import {
+  analyzeElaImage,
   analyzeImage,
   analyzeImageEnsemble,
   AnalysisResult as ApiAnalysisResult,
@@ -45,55 +46,30 @@ const Detect: React.FC = () => {
   });
 
   const handleAnalyze = async () => {
-    if (!file) {
-      setError("Please select an image first.");
-      return;
-    }
+  if (!file) {
+    setError("Please select an image first.");
+    return;
+  }
 
-    setError(null);
-    setIsProcessing(true);
+  setError(null);
+  setIsProcessing(true);
 
-    try {
-      // Request all visualization types - the user will select which ones to view on the results page
-      const allVisualizationMethods: LocalizationMethod[] = [
-        "heatmap",
-        "overlay",
-        "contour",
-        "mask",
-        "edge",
-        "highlight",
-      ];
+  try {
+    // Only call ELA API
+    const elaResult = await analyzeElaImage(file);
 
-      let result;
-      // if (useEnsemble) {
-      //   // Use ensemble approach with multiple models
-      //   result = await analyzeImageEnsemble(
-      //     file,
-      //     showLocalization,
-      //     showEla,
-      //     showLocalization ? allVisualizationMethods : []
-      //   );
-      // } else {
-      //   // Use single model approach
-        result = await analyzeImage(
-          file,
-          showLocalization,
-          showEla,
-          showLocalization ? allVisualizationMethods : []
-        );
-      // }
+    // Set the result containing just the ELA data
+    setResult({ ela: elaResult });
 
-      setResult(result);
-      console.log("result", result)
-    } catch (err) {
-      console.error("Error analyzing image:", err);
-      setError(
-        "An error occurred while analyzing the image. Please try again."
-      );
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+    console.log("ELA Result:", elaResult);
+  } catch (err) {
+    console.error("Error analyzing image:", err);
+    setError("An error occurred during ELA analysis. Please try again.");
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
 
   const handleReset = () => {
     clearImage();
@@ -179,27 +155,7 @@ const Detect: React.FC = () => {
                       </label>
                     </div>
 
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="useEnsemble"
-                        checked={useEnsemble}
-                        onChange={(e) => setUseEnsemble(e.target.checked)}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                      />
-                      <label
-                        htmlFor="useEnsemble"
-                        className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
-                      >
-                        <div className="flex items-center">
-                          <FaBrain className="mr-1" />
-                          Use Model Ensemble
-                          <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full dark:bg-green-900 dark:text-green-300">
-                            Recommended
-                          </span>
-                        </div>
-                      </label>
-                    </div>
+                    
                   </div>
 
                   {/* {useEnsemble && (

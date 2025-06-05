@@ -1,10 +1,13 @@
 import time
 import os
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from src.api.routes.prediction_routes import router as prediction_router
+from PIL import Image
+from src.api.services.ela import generate_ela_image
 from src.api.utils.logger import setup_logger
+import io
 
 # Setup logger
 logger = setup_logger()
@@ -76,6 +79,7 @@ async def health_check():
             status_code=500,
             content={"status": "unhealthy", "error": str(e)}
         )
+
 
 # Exception handler
 @app.exception_handler(Exception)
