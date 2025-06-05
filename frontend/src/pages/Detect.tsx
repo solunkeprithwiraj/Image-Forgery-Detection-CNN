@@ -46,30 +46,29 @@ const Detect: React.FC = () => {
   });
 
   const handleAnalyze = async () => {
-  if (!file) {
-    setError("Please select an image first.");
-    return;
-  }
+    if (!file) {
+      setError("Please select an image first.");
+      return;
+    }
 
-  setError(null);
-  setIsProcessing(true);
+    setError(null);
+    setIsProcessing(true);
 
-  try {
-    // Only call ELA API
-    const elaResult = await analyzeElaImage(file);
+    try {
+      // Only call ELA API
+      const elaResult = await analyzeElaImage(file);
 
-    // Set the result containing just the ELA data
-    setResult({ ela: elaResult });
+      // Set the result containing just the ELA data
+      setResult({ ela: elaResult });
 
-    console.log("ELA Result:", elaResult);
-  } catch (err) {
-    console.error("Error analyzing image:", err);
-    setError("An error occurred during ELA analysis. Please try again.");
-  } finally {
-    setIsProcessing(false);
-  }
-};
-
+      console.log("ELA Result:", elaResult);
+    } catch (err) {
+      console.error("Error analyzing image:", err);
+      setError("An error occurred during ELA analysis. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleReset = () => {
     clearImage();
@@ -78,252 +77,232 @@ const Detect: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-5xl mx-auto"
-      >
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-4 text-gray-900 dark:text-white">
-          Image Forgery Detection
-        </h1>
-        <p className="text-xl text-center text-gray-600 dark:text-gray-400 mb-12 max-w-3xl mx-auto">
-          Upload an image to analyze it for potential manipulation or forgery
-          using our advanced CNN model.
-        </p>
+    <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 min-h-screen py-12 relative overflow-hidden">
+      {/* Animated gradient orbs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-cyan-400/20 to-blue-600/20 rounded-full blur-3xl animate-pulse z-0"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-purple-400/20 to-pink-600/20 rounded-full blur-3xl animate-pulse animation-delay-1000 z-0"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-emerald-400/15 to-teal-600/15 rounded-full blur-3xl animate-bounce z-0"></div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-          <div className="p-6 md:p-8">
-            {!result ? (
-              <>
-                <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
-                  <div className="flex items-start">
-                    <FaInfoCircle className="text-blue-500 dark:text-blue-400 mt-1 mr-3 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-1">
-                        Supported Image Formats
-                      </h4>
-                      <p className="text-blue-700 dark:text-blue-400 text-sm">
-                        You can upload images in JPG, JPEG, PNG, and BMP
-                        formats. Maximum file size is 10MB.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+      {/* Dark overlay for better text readability */}
+      <div className="absolute inset-0 bg-black/40 z-0"></div>
 
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                    Detection Options
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="showLocalization"
-                        checked={showLocalization}
-                        onChange={(e) => setShowLocalization(e.target.checked)}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                      />
-                      <label
-                        htmlFor="showLocalization"
-                        className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
-                      >
-                        <div className="flex items-center">
-                          <FaSearchLocation className="mr-1" />
-                          Localize Tampering
-                        </div>
-                      </label>
-                    </div>
+      <div className="container mx-auto px-4 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-5xl mx-auto"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-4 text-white">
+            Image Forgery Detection
+          </h1>
+          <p className="text-xl text-center text-gray-300 mb-12 max-w-3xl mx-auto">
+            Upload an image to analyze it for potential manipulation or forgery
+            using our advanced CNN model.
+          </p>
 
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="showEla"
-                        checked={showEla}
-                        onChange={(e) => setShowEla(e.target.checked)}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                      />
-                      <label
-                        htmlFor="showEla"
-                        className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
-                      >
-                        <div className="flex items-center">
-                          <FaLayerGroup className="mr-1" />
-                          Error Level Analysis
-                        </div>
-                      </label>
-                    </div>
-
-                    
-                  </div>
-
-                  {/* {useEnsemble && (
-                    <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <div className="flex items-start">
-                        <FaBrain className="text-primary-500 dark:text-primary-400 mt-1 mr-2 flex-shrink-0" />
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                          Ensemble mode uses multiple AI models to analyze your
-                          image, providing higher accuracy and better detection
-                          of various tampering techniques.
-                        </div>
+          <div className="bg-white/10 backdrop-blur-xl rounded-xl shadow-lg overflow-hidden border border-white/20 hover:border-white/30 transition-all duration-300">
+            <div className="p-6 md:p-8">
+              {!result ? (
+                <>
+                  <div className="mb-8 p-4 bg-blue-900/30 backdrop-blur-sm rounded-lg border border-blue-500/30">
+                    <div className="flex items-start">
+                      <FaInfoCircle className="text-blue-400 mt-1 mr-3 flex-shrink-0" />
+                      <div>
+                        <h4 className="font-medium text-blue-300 mb-1">
+                          Supported Image Formats
+                        </h4>
+                        <p className="text-blue-400 text-sm">
+                          You can upload images in JPG, JPEG, PNG, and BMP
+                          formats. Maximum file size is 10MB.
+                        </p>
                       </div>
                     </div>
-                  )} */}
-                </div>
+                  </div>
 
-                <div className="w-full">
-                  {!preview ? (
-                    <div
-                      {...getRootProps()}
-                      className={`
-                        w-full border-2 border-dashed rounded-lg p-8 transition-colors
-                        ${
-                          isDragActive
-                            ? "bg-primary-50 dark:bg-primary-900/20 border-primary-400"
-                            : "border-gray-300 dark:border-gray-700"
-                        }
-                        ${
-                          isDragAccept
-                            ? "bg-green-50 dark:bg-green-900/20 border-green-400"
-                            : ""
-                        }
-                        ${
-                          isDragReject || uploadError
-                            ? "bg-red-50 dark:bg-red-900/20 border-red-400"
-                            : ""
-                        }
-                        ${
-                          isProcessing
-                            ? "pointer-events-none opacity-60"
-                            : "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50"
-                        }
-                      `}
-                    >
-                      <input {...getInputProps()} disabled={isProcessing} />
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium text-white mb-3">
+                      Detection Options
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="showLocalization"
+                          checked={showLocalization}
+                          onChange={(e) =>
+                            setShowLocalization(e.target.checked)
+                          }
+                          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        />
+                        <label
+                          htmlFor="showLocalization"
+                          className="ml-2 block text-sm text-gray-300"
+                        >
+                          <div className="flex items-center">
+                            <FaSearchLocation className="mr-1" />
+                            Localize Tampering
+                          </div>
+                        </label>
+                      </div>
 
-                      <div className="flex flex-col items-center justify-center text-center">
-                        <div className="h-16 w-16 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center mb-4">
-                          {isDragActive ? (
-                            <FaUpload className="h-7 w-7 text-primary-600 dark:text-primary-400" />
-                          ) : (
-                            <FaImage className="h-7 w-7 text-primary-600 dark:text-primary-400" />
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="showEla"
+                          checked={showEla}
+                          onChange={(e) => setShowEla(e.target.checked)}
+                          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        />
+                        <label
+                          htmlFor="showEla"
+                          className="ml-2 block text-sm text-gray-300"
+                        >
+                          <div className="flex items-center">
+                            <FaLayerGroup className="mr-1" />
+                            Error Level Analysis
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* {useEnsemble && (
+                      <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div className="flex items-start">
+                          <FaBrain className="text-primary-500 dark:text-primary-400 mt-1 mr-2 flex-shrink-0" />
+                          <div className="text-sm text-gray-600 dark:text-gray-300">
+                            Ensemble mode uses multiple AI models to analyze your
+                            image, providing higher accuracy and better detection
+                            of various tampering techniques.
+                          </div>
+                        </div>
+                      </div>
+                    )} */}
+                  </div>
+
+                  <div className="w-full">
+                    {!preview ? (
+                      <div
+                        {...getRootProps()}
+                        className={`
+                          w-full border-2 border-dashed rounded-lg p-8 transition-colors
+                          ${
+                            isDragActive
+                              ? "bg-primary-900/30 border-primary-400"
+                              : "border-gray-300/50"
+                          }
+                          ${
+                            isDragAccept
+                              ? "bg-green-900/30 border-green-400"
+                              : ""
+                          }
+                          ${
+                            isDragReject || uploadError
+                              ? "bg-red-900/30 border-red-400"
+                              : ""
+                          }
+                          ${
+                            isProcessing
+                              ? "pointer-events-none opacity-60"
+                              : "cursor-pointer hover:bg-white/5"
+                          }
+                        `}
+                      >
+                        <input {...getInputProps()} />
+                        <div className="flex flex-col items-center justify-center text-center">
+                          <FaUpload className="text-4xl text-gray-300 mb-4" />
+                          <p className="text-lg text-gray-300 mb-2">
+                            {isDragActive
+                              ? "Drop the image here..."
+                              : "Drag & drop an image here, or click to select"}
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            JPG, JPEG, PNG, BMP (max 10MB)
+                          </p>
+                          {uploadError && (
+                            <p className="mt-4 text-red-400 text-sm">
+                              {uploadError}
+                            </p>
                           )}
                         </div>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <div className="relative rounded-lg overflow-hidden border border-white/20 shadow-xl">
+                          <img
+                            src={preview}
+                            alt="Preview"
+                            className="w-full h-auto max-h-[500px] object-contain bg-black/50 backdrop-blur-sm"
+                          />
+                          <button
+                            onClick={handleReset}
+                            className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600/80 text-white rounded-full p-2 transition-colors backdrop-blur-sm"
+                            disabled={isProcessing}
+                          >
+                            <FaTimes />
+                          </button>
+                        </div>
 
-                        {isDragActive ? (
-                          <p className="text-lg font-medium text-gray-900 dark:text-white">
-                            Drop the image here
-                          </p>
-                        ) : (
-                          <>
-                            <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                              Drag & drop an image here, or click to select
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              Support for JPG, PNG, GIF, TIFF (Max size: 10MB)
-                            </p>
-                          </>
-                        )}
+                        <div className="mt-6 flex justify-center">
+                          <button
+                            onClick={handleAnalyze}
+                            disabled={isProcessing}
+                            className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl font-semibold shadow-2xl shadow-cyan-500/25 flex items-center justify-center transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                          >
+                            {isProcessing ? (
+                              <>
+                                <svg
+                                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  ></path>
+                                </svg>
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <FaImage className="mr-2" /> Analyze Image
+                              </>
+                            )}
+                          </button>
+                        </div>
 
-                        {uploadError && (
-                          <div className="mt-4 text-red-600 dark:text-red-400 flex items-center">
-                            <FaInfoCircle className="mr-2" />
-                            <span>{uploadError}</span>
+                        {error && (
+                          <div className="mt-4 p-4 bg-red-900/30 backdrop-blur-sm text-red-300 rounded-lg border border-red-500/30 text-center">
+                            {error}
                           </div>
                         )}
                       </div>
-                    </div>
-                  ) : (
-                    <div className="relative w-full rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700">
-                      <img
-                        src={preview}
-                        alt="Selected image preview"
-                        className="w-full h-auto max-h-[400px] object-contain bg-gray-100 dark:bg-gray-800"
-                      />
-
-                      {!isProcessing && (
-                        <button
-                          type="button"
-                          className="absolute top-2 right-2 p-2 rounded-full bg-red-600 text-white shadow-md hover:bg-red-700"
-                          onClick={clearImage}
-                          aria-label="Remove image"
-                        >
-                          <FaTimes className="h-4 w-4" />
-                        </button>
-                      )}
-
-                      {isProcessing && (
-                        <div className="absolute inset-0 bg-gray-900/70 backdrop-blur-sm flex flex-col items-center justify-center">
-                          <div className="w-12 h-12 border-4 border-gray-400 border-t-primary-600 rounded-full animate-spin mb-4"></div>
-                          <p className="text-white font-medium">
-                            {useEnsemble
-                              ? "Running ensemble analysis..."
-                              : "Analyzing image..."}
-                          </p>
-                          {useEnsemble && (
-                            <p className="text-white text-sm mt-2">
-                              This may take a bit longer as multiple models are
-                              being used
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {error && (
-                  <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg border border-red-100 dark:border-red-800">
-                    {error}
+                    )}
                   </div>
-                )}
-
-                <div className="mt-8 flex items-center justify-center gap-4">
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-md disabled:opacity-60 disabled:cursor-not-allowed flex-1 max-w-xs"
-                    disabled={!file || isProcessing}
-                    onClick={handleAnalyze}
-                  >
-                    {isProcessing ? "Analyzing..." : "Analyze Image"}
-                  </motion.button>
-
-                  {file && (
-                    <motion.button
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      className="px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium rounded-lg shadow-md flex-1 max-w-xs"
-                      onClick={handleReset}
-                    >
-                      Reset
-                    </motion.button>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
+                </>
+              ) : (
                 <AnalysisResult
                   result={result}
-                  apiBaseUrl={"http://localhost:8000"}
+                  originalImage={preview || ""}
+                  onReset={handleReset}
+                  showLocalization={showLocalization}
+                  showEla={showEla}
                 />
-
-                <div className="mt-8 flex justify-center">
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium rounded-lg shadow-md"
-                    onClick={handleReset}
-                  >
-                    Analyze Another Image
-                  </motion.button>
-                </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 };

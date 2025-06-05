@@ -1,6 +1,7 @@
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import Spline from '@splinetool/react-spline';
+import Spline from "@splinetool/react-spline";
 
 import {
   FaArrowRight,
@@ -15,26 +16,52 @@ import {
 } from "react-icons/fa";
 import ThreeDModel from "../components/3D_Model/3DModel";
 
+// Error boundary component for Spline
+class SplineErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900"></div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const Home = () => {
+  const [splineError, setSplineError] = useState(false);
+
+  const handleSplineError = (e) => {
+    console.error("Spline loading error:", e);
+    setSplineError(true);
+  };
+
   return (
     <>
       {/* Hero Section with Spline Background */}
       <section className="relative py-16 md:py-24 bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 overflow-hidden min-h-screen">
         {/* Spline 3D Background */}
         <div className="absolute inset-0 z-0">
-          <Spline 
-            scene="https://prod.spline.design/3ff7b617-2fe9-46c7-8e06-b6d7c382f4db/scene.splinecode"
-            style={{ 
-              width: '100%', 
-              height: '100%',
-              opacity: 0.3
-            }}
-          />
+          {!splineError ? (
+            <ThreeDModel />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900"></div>
+          )}
         </div>
-        
+
         {/* Dark overlay for better text readability */}
         <div className="absolute inset-0 bg-black/40 z-10"></div>
-        
+
         {/* Animated gradient orbs */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-cyan-400/20 to-blue-600/20 rounded-full blur-3xl animate-pulse z-20"></div>
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-purple-400/20 to-pink-600/20 rounded-full blur-3xl animate-pulse animation-delay-1000 z-20"></div>
@@ -55,7 +82,9 @@ const Home = () => {
                 className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-sm border border-cyan-400/30 rounded-full mb-6"
               >
                 <FaShieldAlt className="text-cyan-400 mr-2" />
-                <span className="text-cyan-300 text-sm font-medium">Next-Gen AI Security</span>
+                <span className="text-cyan-300 text-sm font-medium">
+                  Next-Gen AI Security
+                </span>
               </motion.div>
 
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
@@ -71,15 +100,19 @@ const Home = () => {
               </h1>
 
               <p className="text-xl text-gray-200 mb-8 max-w-lg leading-relaxed">
-                Detect sophisticated image manipulations with state-of-the-art deep learning. 
-                Protect digital authenticity with military-grade precision.
+                Detect sophisticated image manipulations with state-of-the-art
+                deep learning. Protect digital authenticity with military-grade
+                precision.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link to="/detect">
                   <motion.button
                     className="group px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl font-semibold shadow-2xl shadow-cyan-500/25 flex items-center justify-center transition-all duration-300 transform hover:scale-105"
-                    whileHover={{ scale: 1.05, boxShadow: "0 25px 50px -12px rgba(6, 182, 212, 0.4)" }}
+                    whileHover={{
+                      scale: 1.05,
+                      boxShadow: "0 25px 50px -12px rgba(6, 182, 212, 0.4)",
+                    }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <FaEye className="mr-2 group-hover:animate-pulse" />
@@ -103,9 +136,21 @@ const Home = () => {
               {/* Performance indicators */}
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: "Accuracy", value: "99.2%", color: "from-green-400 to-emerald-500" },
-                  { label: "Speed", value: "< 2s", color: "from-blue-400 to-cyan-500" },
-                  { label: "Models", value: "5+", color: "from-purple-400 to-pink-500" },
+                  {
+                    label: "Accuracy",
+                    value: "99.2%",
+                    color: "from-green-400 to-emerald-500",
+                  },
+                  {
+                    label: "Speed",
+                    value: "< 2s",
+                    color: "from-blue-400 to-cyan-500",
+                  },
+                  {
+                    label: "Models",
+                    value: "5+",
+                    color: "from-purple-400 to-pink-500",
+                  },
                 ].map((stat, index) => (
                   <motion.div
                     key={index}
@@ -114,105 +159,15 @@ const Home = () => {
                     transition={{ duration: 0.6, delay: 0.4 + index * 0.1 }}
                     className="bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/20"
                   >
-                    <div className={`text-lg font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
+                    <div
+                      className={`text-lg font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
+                    >
                       {stat.value}
                     </div>
                     <div className="text-gray-300 text-xs">{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="relative"
-            >
-              <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-white/20">
-                {/* Glowing border effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-3xl blur-xl"></div>
-                
-                <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-gradient-to-br from-gray-800 to-gray-900">
-                  <ThreeDModel />
-
-                  <div className="absolute top-4 right-4 flex gap-2">
-                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1.5 rounded-full text-sm backdrop-blur-sm flex items-center shadow-lg">
-                      <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
-                      AI Active
-                    </div>
-                  </div>
-
-                  {/* Scanning animation overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent transform -skew-x-12 animate-scan"></div>
-                </div>
-
-                <div className="mt-6 space-y-4">
-                  <div className="bg-gradient-to-r from-green-500/20 to-emerald-600/20 backdrop-blur-sm p-4 rounded-xl border border-green-400/30">
-                    <div className="flex items-start">
-                      <FaCheckCircle className="text-green-400 mt-0.5 mr-3 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold text-green-300 mb-1">
-                          Neural Network Initialized
-                        </h4>
-                        <p className="text-green-200/80 text-sm">
-                          Advanced CNN ensemble ready for forensic analysis.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-300">Model Confidence</span>
-                    <span className="text-sm font-bold text-white">99.2%</span>
-                  </div>
-                  <div className="w-full bg-white/20 rounded-full h-3 backdrop-blur-sm">
-                    <div
-                      className="bg-gradient-to-r from-cyan-400 to-blue-500 h-3 rounded-full shadow-lg relative overflow-hidden"
-                      style={{ width: "99.2%" }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 animate-shimmer"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating cards */}
-              <motion.div
-                className="absolute -top-8 -right-8 bg-gradient-to-r from-cyan-500/20 to-blue-600/20 backdrop-blur-xl p-4 rounded-2xl shadow-2xl border border-cyan-400/30"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.6, duration: 0.8 }}
-                whileHover={{ scale: 1.05 }}
-              >
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 flex items-center justify-center mr-3">
-                    <FaChartBar className="text-white" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-white">99.2% Precise</div>
-                    <div className="text-xs text-cyan-300">Forensic Grade</div>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                className="absolute -bottom-8 -left-8 bg-gradient-to-r from-purple-500/20 to-pink-600/20 backdrop-blur-xl p-4 rounded-2xl shadow-2xl border border-purple-400/30"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.8, duration: 0.8 }}
-                whileHover={{ scale: 1.05 }}
-              >
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center mr-3">
-                    <FaBrain className="text-white" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-white">Deep Learning</div>
-                    <div className="text-xs text-purple-300">5 AI Models</div>
-                  </div>
-                </div>
-              </motion.div>
             </motion.div>
           </div>
         </div>
@@ -222,10 +177,13 @@ const Home = () => {
       <section className="py-24 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.3) 1px, transparent 0)`,
-            backgroundSize: '50px 50px'
-          }}></div>
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.3) 1px, transparent 0)`,
+              backgroundSize: "50px 50px",
+            }}
+          ></div>
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 relative z-10">
@@ -238,7 +196,9 @@ const Home = () => {
               transition={{ duration: 0.6 }}
             >
               <FaShieldAlt className="text-blue-600 dark:text-blue-400 mr-2" />
-              <span className="text-blue-700 dark:text-blue-300 font-semibold">Advanced Capabilities</span>
+              <span className="text-blue-700 dark:text-blue-300 font-semibold">
+                Advanced Capabilities
+              </span>
             </motion.div>
 
             <motion.h2
@@ -258,8 +218,9 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              Powered by ensemble deep learning architectures and trained on millions of forensic samples 
-              to detect even the most sophisticated image manipulations.
+              Powered by ensemble deep learning architectures and trained on
+              millions of forensic samples to detect even the most sophisticated
+              image manipulations.
             </motion.p>
           </div>
 
@@ -268,44 +229,50 @@ const Home = () => {
               {
                 icon: <FaEye className="h-7 w-7" />,
                 title: "Pixel-Level Analysis",
-                description: "Examine every pixel with microscopic precision to detect subtle manipulation artifacts invisible to the human eye.",
+                description:
+                  "Examine every pixel with microscopic precision to detect subtle manipulation artifacts invisible to the human eye.",
                 gradient: "from-blue-500 via-cyan-500 to-teal-500",
-                color: "blue"
+                color: "blue",
               },
               {
                 icon: <FaBrain className="h-7 w-7" />,
                 title: "Ensemble AI Models",
-                description: "Multiple specialized neural networks working in harmony to achieve unprecedented detection accuracy.",
+                description:
+                  "Multiple specialized neural networks working in harmony to achieve unprecedented detection accuracy.",
                 gradient: "from-purple-500 via-pink-500 to-rose-500",
-                color: "purple"
+                color: "purple",
               },
               {
                 icon: <FaShieldAlt className="h-7 w-7" />,
                 title: "Anti-Adversarial Defense",
-                description: "Robust against sophisticated attacks designed to fool AI detection systems.",
+                description:
+                  "Robust against sophisticated attacks designed to fool AI detection systems.",
                 gradient: "from-emerald-500 via-green-500 to-teal-500",
-                color: "emerald"
+                color: "emerald",
               },
               {
                 icon: <FaTachometerAlt className="h-7 w-7" />,
                 title: "Real-Time Processing",
-                description: "Lightning-fast analysis with optimized GPU acceleration for instant results.",
+                description:
+                  "Lightning-fast analysis with optimized GPU acceleration for instant results.",
                 gradient: "from-orange-500 via-red-500 to-pink-500",
-                color: "orange"
+                color: "orange",
               },
               {
                 icon: <FaChartBar className="h-7 w-7" />,
                 title: "Forensic Reporting",
-                description: "Comprehensive analysis reports suitable for legal proceedings and professional investigations.",
+                description:
+                  "Comprehensive analysis reports suitable for legal proceedings and professional investigations.",
                 gradient: "from-indigo-500 via-blue-500 to-cyan-500",
-                color: "indigo"
+                color: "indigo",
               },
               {
                 icon: <FaRegLightbulb className="h-7 w-7" />,
                 title: "Intuitive Interface",
-                description: "Professional-grade capabilities wrapped in a user-friendly interface accessible to everyone.",
+                description:
+                  "Professional-grade capabilities wrapped in a user-friendly interface accessible to everyone.",
                 gradient: "from-yellow-500 via-orange-500 to-red-500",
-                color: "yellow"
+                color: "yellow",
               },
             ].map((feature, index) => (
               <motion.div
@@ -318,8 +285,10 @@ const Home = () => {
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-gray-100/50 dark:to-gray-700/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                
-                <div className={`relative w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.gradient} flex items-center justify-center text-white mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+
+                <div
+                  className={`relative w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.gradient} flex items-center justify-center text-white mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                >
                   {feature.icon}
                   <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
@@ -332,7 +301,9 @@ const Home = () => {
                   {feature.description}
                 </p>
 
-                <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.gradient} rounded-b-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+                <div
+                  className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.gradient} rounded-b-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                ></div>
               </motion.div>
             ))}
           </div>
@@ -358,7 +329,9 @@ const Home = () => {
               transition={{ duration: 0.6 }}
             >
               <FaCog className="text-cyan-400 mr-2" />
-              <span className="text-cyan-300 font-semibold">Process Overview</span>
+              <span className="text-cyan-300 font-semibold">
+                Process Overview
+              </span>
             </motion.div>
 
             <motion.h2
@@ -368,7 +341,10 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              How It <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Works</span>
+              How It{" "}
+              <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                Works
+              </span>
             </motion.h2>
 
             <motion.p
@@ -378,8 +354,9 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              Our advanced forensic pipeline combines multiple AI models and sophisticated algorithms 
-              to provide comprehensive image authenticity analysis.
+              Our advanced forensic pipeline combines multiple AI models and
+              sophisticated algorithms to provide comprehensive image
+              authenticity analysis.
             </motion.p>
           </div>
 
@@ -388,23 +365,26 @@ const Home = () => {
               {
                 number: 1,
                 title: "Upload & Preprocessing",
-                description: "Secure upload with automatic format optimization and metadata extraction for comprehensive analysis.",
+                description:
+                  "Secure upload with automatic format optimization and metadata extraction for comprehensive analysis.",
                 icon: <FaRegLightbulb className="h-8 w-8" />,
-                gradient: "from-cyan-400 to-blue-500"
+                gradient: "from-cyan-400 to-blue-500",
               },
               {
                 number: 2,
                 title: "AI Ensemble Analysis",
-                description: "Multiple specialized neural networks analyze different aspects: compression artifacts, statistical anomalies, and pixel patterns.",
+                description:
+                  "Multiple specialized neural networks analyze different aspects: compression artifacts, statistical anomalies, and pixel patterns.",
                 icon: <FaBrain className="h-8 w-8" />,
-                gradient: "from-blue-500 to-purple-500"
+                gradient: "from-blue-500 to-purple-500",
               },
               {
                 number: 3,
                 title: "Forensic Report",
-                description: "Detailed results with confidence scores, localization maps, and comprehensive authenticity assessment.",
+                description:
+                  "Detailed results with confidence scores, localization maps, and comprehensive authenticity assessment.",
                 icon: <FaChartBar className="h-8 w-8" />,
-                gradient: "from-purple-500 to-pink-500"
+                gradient: "from-purple-500 to-pink-500",
               },
             ].map((step, index) => (
               <motion.div
@@ -417,12 +397,16 @@ const Home = () => {
               >
                 <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 text-center relative shadow-2xl border border-white/20 group-hover:border-white/40 transition-all duration-500 group-hover:-translate-y-2">
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${step.gradient} flex items-center justify-center text-white font-bold text-2xl shadow-2xl group-hover:scale-110 transition-transform duration-300`}>
+                    <div
+                      className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${step.gradient} flex items-center justify-center text-white font-bold text-2xl shadow-2xl group-hover:scale-110 transition-transform duration-300`}
+                    >
                       {step.number}
                     </div>
                   </div>
 
-                  <div className={`mx-auto mb-6 mt-4 w-20 h-20 bg-gradient-to-r ${step.gradient} rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <div
+                    className={`mx-auto mb-6 mt-4 w-20 h-20 bg-gradient-to-r ${step.gradient} rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                  >
                     {step.icon}
                   </div>
 
@@ -463,33 +447,33 @@ const Home = () => {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { 
-                value: "99.2%", 
+              {
+                value: "99.2%",
                 label: "Detection Accuracy",
                 icon: <FaCheckCircle className="h-8 w-8" />,
                 gradient: "from-green-400 to-emerald-500",
-                description: "Verified on 100K+ samples"
+                description: "Verified on 100K+ samples",
               },
-              { 
-                value: "< 2s", 
+              {
+                value: "< 2s",
                 label: "Processing Time",
                 icon: <FaTachometerAlt className="h-8 w-8" />,
                 gradient: "from-blue-400 to-cyan-500",
-                description: "Lightning fast analysis"
+                description: "Lightning fast analysis",
               },
-              { 
-                value: "97.8%", 
+              {
+                value: "97.8%",
                 label: "Localization Precision",
                 icon: <FaEye className="h-8 w-8" />,
                 gradient: "from-purple-400 to-pink-500",
-                description: "Pixel-perfect detection"
+                description: "Pixel-perfect detection",
               },
-              { 
-                value: "15+", 
+              {
+                value: "15+",
                 label: "Forgery Types",
                 icon: <FaShieldAlt className="h-8 w-8" />,
                 gradient: "from-orange-400 to-red-500",
-                description: "Comprehensive coverage"
+                description: "Comprehensive coverage",
               },
             ].map((stat, index) => (
               <motion.div
@@ -501,10 +485,14 @@ const Home = () => {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 whileHover={{ scale: 1.05 }}
               >
-                <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-r ${stat.gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                <div
+                  className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-r ${stat.gradient} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                >
                   {stat.icon}
                 </div>
-                <div className={`text-4xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent mb-2`}>
+                <div
+                  className={`text-4xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent mb-2`}
+                >
                   {stat.value}
                 </div>
                 <div className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -538,7 +526,9 @@ const Home = () => {
           >
             <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-400/30 rounded-full mb-8">
               <FaShieldAlt className="text-cyan-400 mr-2" />
-              <span className="text-cyan-300 font-semibold">Ready to Deploy</span>
+              <span className="text-cyan-300 font-semibold">
+                Ready to Deploy
+              </span>
             </div>
 
             <h2 className="text-4xl lg:text-6xl font-bold mb-6 text-white">
@@ -547,10 +537,11 @@ const Home = () => {
                 Authenticity
               </span>
             </h2>
-            
+
             <p className="text-xl text-gray-300 mb-12 leading-relaxed max-w-3xl mx-auto">
-              Join the fight against digital deception. Deploy our military-grade image forensics 
-              technology and ensure the integrity of visual content in your organization.
+              Join the fight against digital deception. Deploy our
+              military-grade image forensics technology and ensure the integrity
+              of visual content in your organization.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -584,18 +575,18 @@ const Home = () => {
                 {
                   icon: <FaShieldAlt className="h-6 w-6" />,
                   title: "Military Grade",
-                  description: "Trusted by defense agencies"
+                  description: "Trusted by defense agencies",
                 },
                 {
                   icon: <FaCheckCircle className="h-6 w-6" />,
                   title: "99.2% Accurate",
-                  description: "Verified on forensic datasets"
+                  description: "Verified on forensic datasets",
                 },
                 {
                   icon: <FaCog className="h-6 w-6" />,
                   title: "Real-Time",
-                  description: "Instant analysis results"
-                }
+                  description: "Instant analysis results",
+                },
               ].map((item, index) => (
                 <motion.div
                   key={index}
@@ -610,7 +601,9 @@ const Home = () => {
                   </div>
                   <div className="text-left">
                     <div className="font-semibold text-white">{item.title}</div>
-                    <div className="text-sm text-gray-300">{item.description}</div>
+                    <div className="text-sm text-gray-300">
+                      {item.description}
+                    </div>
                   </div>
                 </motion.div>
               ))}

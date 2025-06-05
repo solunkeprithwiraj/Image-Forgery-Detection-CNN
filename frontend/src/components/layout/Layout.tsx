@@ -41,7 +41,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
       <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-      <main className="flex-grow pt-16">{children}</main>
+      <main className="flex-grow">{children}</main>
       <Footer />
     </div>
   );
