@@ -7,8 +7,8 @@ import {
   FaTimes,
   FaLayerGroup,
   FaSearchLocation,
-  FaBrain,
-  FaHeatmap,
+  // FaBrain,
+  // FaHeatmap,
 } from "react-icons/fa";
 import AnalysisResult from "../components/ui/AnalysisResult";
 import {
@@ -428,7 +428,7 @@ const Detect: React.FC = () => {
                                 </span>
                               ) : (
                                 <>
-                                  <FaHeatmap className="mr-2" /> Generate Heatmap
+                                  <FaLayerGroup className="mr-2" /> Generate Heatmap
                                 </>
                               )}
                             </button>

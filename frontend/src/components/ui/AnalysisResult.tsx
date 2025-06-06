@@ -7,7 +7,7 @@ import {
   FaBrain,
   FaDownload,
   FaEye,
-  FaHeatmap,
+  // FaHeatmap,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 
@@ -133,7 +133,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
           </div>
         ) : heatmapImageUrl ? (
           <div className="flex items-center text-red-500 dark:text-red-400">
-            <FaHeatmap className="text-3xl mr-3" />
+            <FaExclamationTriangle className="text-3xl mr-3" />
             <h2 className="text-2xl font-bold">Forgery Heatmap Generated</h2>
           </div>
         ) : (
