@@ -62,3 +62,28 @@ def predict_image(image_path, cnn_model, svm_model):
     except Exception as e:
         logger.error(f"Error predicting image {image_path}: {str(e)}", exc_info=True)
         raise ValueError(f"Prediction error: {str(e)}")
+    
+# def get_prediction_mask(image: Image.Image, cnn_model, svm_model, patch_size=64, stride=32):
+#     """
+#     Slide a window over the image, run prediction per patch, and return 2D heatmap.
+#     :returns: 2D numpy array with tampering confidence scores
+#     """
+#     image = image.convert("RGB")
+#     image_np = np.array(image)
+#     h, w, _ = image_np.shape
+
+#     heatmap = np.zeros(((h - patch_size) // stride + 1, (w - patch_size) // stride + 1))
+
+#     for i in range(0, h - patch_size + 1, stride):
+#         for j in range(0, w - patch_size + 1, stride):
+#             patch = image.crop((j, i, j + patch_size, i + patch_size))
+
+#             try:
+#                 feature = get_feature_vector(patch, cnn_model)
+#                 proba = svm_model.predict_proba(feature)[0][1]  # Tampered class probability
+#             except Exception as e:
+#                 proba = 0.0  # fallback in case of error
+
+#             heatmap[i // stride, j // stride] = proba
+
+#     return heatmap

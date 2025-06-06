@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
+from fastapi import FastAPI,APIRouter, File, UploadFile, HTTPException, Depends
 from typing import List
 import os
 import shutil
@@ -12,6 +12,7 @@ from PIL import Image
 from src.api.services.ela import generate_ela_image
 import io
 from src.api.models.models import PredictionResult, MultiPredictionResult
+from src.api.services.heatmap import generate_forgery_heatmap
 
 # Create router
 router = APIRouter()
@@ -172,4 +173,26 @@ async def perform_ela(image: UploadFile = File(...)):
     ela_image.save(buffer, format="PNG")
     buffer.seek(0)
 
+    return StreamingResponse(buffer, media_type="image/png")
+
+
+
+# @router.post("/heatmap/forgery")
+# async def create_forgery_heatmap(file: UploadFile = File(...), models: dict = Depends(inject_models)):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Invalid image format")
+
+    image_data = await file.read()
+    image = Image.open(io.BytesIO(image_data)).convert("RGB")
+
+    # Generate heatmap prediction mask
+    prediction_mask = get_prediction_mask(image, models["cnn_model"], models["svm_model"])
+
+    # Overlay heatmap on image
+    from src.api.services.heatmap import generate_forgery_heatmap
+    heatmap_image = generate_forgery_heatmap(image, prediction_mask)
+
+    buffer = io.BytesIO()
+    heatmap_image.save(buffer, format="PNG")
+    buffer.seek(0)
     return StreamingResponse(buffer, media_type="image/png")
