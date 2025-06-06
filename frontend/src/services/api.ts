@@ -66,6 +66,31 @@ export const analyzeElaImage = async (file: File): Promise<string> => {
   }
 };
 
+export const generateForgeryHeatmap = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const response = await fetch("http://localhost:8000/api/heatmap/forgery", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Forgery heatmap generation failed: ${response.status} ${response.statusText}`
+      );
+    }
+
+    // Convert the response blob to a data URL
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error("Error generating forgery heatmap:", error);
+    throw error;
+  }
+};
+
 export const analyzeImage = async (
   imageFile: File,
   showLocalization: boolean = true,

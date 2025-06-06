@@ -8,12 +8,14 @@ import {
   FaLayerGroup,
   FaSearchLocation,
   FaBrain,
+  FaHeatmap,
 } from "react-icons/fa";
 import AnalysisResult from "../components/ui/AnalysisResult";
 import {
   analyzeElaImage,
   analyzeImage,
   analyzeImageEnsemble,
+  generateForgeryHeatmap,
   AnalysisResult as ApiAnalysisResult,
   LocalizationMethod,
 } from "../services/api";
@@ -26,6 +28,7 @@ const Detect: React.FC = () => {
   const [showLocalization, setShowLocalization] = useState(true);
   const [showEla, setShowEla] = useState(true);
   const [useEnsemble, setUseEnsemble] = useState(true);
+  const [heatmapUrl, setHeatmapUrl] = useState<string | null>(null);
 
   const {
     file,
@@ -116,10 +119,41 @@ const Detect: React.FC = () => {
     }
   };
   
+  const handleHeatmapGeneration = async () => {
+    if (!file) {
+      setError("Please select an image first.");
+      return;
+    }
+
+    setError(null);
+    setIsProcessing(true);
+
+    try {
+      const heatmapImageUrl = await generateForgeryHeatmap(file);
+
+      setResult({
+        filename: file.name,
+        prediction: 0,
+        prediction_label: "Heatmap Analysis",
+        confidence: 0,
+        processing_time: 0,
+        heatmap_path: heatmapImageUrl,
+      });
+
+      console.log("Heatmap Image URL:", heatmapImageUrl);
+    } catch (err) {
+      console.error("Heatmap generation failed:", err);
+      setError("An error occurred during heatmap generation. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
   const handleReset = () => {
     clearImage();
     setResult(null);
     setError(null);
+    setHeatmapUrl(null);
   };
 
   return (
@@ -290,44 +324,115 @@ const Detect: React.FC = () => {
                         </div>
 
                         <div className="mt-6 flex justify-center">
-                          <button
-                            onClick={() => {
-                              handleElaAnalysis();
-                              handlePredict();
-                            }}
-                            disabled={isProcessing}
-                            className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl font-semibold shadow-2xl shadow-cyan-500/25 flex items-center justify-center transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                          >
-                            {isProcessing ? (
-                              <>
-                                <svg
-                                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <circle
-                                    className="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                  ></circle>
-                                  <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                  ></path>
-                                </svg>
-                                Processing...
-                              </>
-                            ) : (
-                              <>
-                                <FaImage className="mr-2" /> Analyze Image
-                              </>
-                            )}
-                          </button>
+                          <div className="flex flex-wrap gap-3 mt-6">
+                            <button
+                              onClick={handlePredict}
+                              disabled={isProcessing || !file}
+                              className="flex-1 min-w-[120px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isProcessing ? (
+                                <span className="flex items-center">
+                                  <svg
+                                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                  </svg>
+                                  Processing...
+                                </span>
+                              ) : (
+                                <>
+                                  <FaImage className="mr-2" /> Analyze Image
+                                </>
+                              )}
+                            </button>
+
+                            <button
+                              onClick={handleElaAnalysis}
+                              disabled={isProcessing || !file}
+                              className="flex-1 min-w-[120px] bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isProcessing ? (
+                                <span className="flex items-center">
+                                  <svg
+                                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                  </svg>
+                                  Processing...
+                                </span>
+                              ) : (
+                                <>
+                                  <FaLayerGroup className="mr-2" /> ELA Analysis
+                                </>
+                              )}
+                            </button>
+                            
+                            <button
+                              onClick={handleHeatmapGeneration}
+                              disabled={isProcessing || !file}
+                              className="flex-1 min-w-[120px] bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isProcessing ? (
+                                <span className="flex items-center">
+                                  <svg
+                                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                  </svg>
+                                  Processing...
+                                </span>
+                              ) : (
+                                <>
+                                  <FaHeatmap className="mr-2" /> Generate Heatmap
+                                </>
+                              )}
+                            </button>
+                          </div>
                         </div>
                         {error && (
                           <div className="mt-4 p-4 bg-red-900/30 backdrop-blur-sm text-red-300 rounded-lg border border-red-500/30 text-center">

@@ -4,7 +4,7 @@ import os
 import shutil
 from tempfile import NamedTemporaryFile
 from concurrent.futures import ThreadPoolExecutor
-from src.api.services.prediction_service import predict_image
+from src.api.services.prediction_service import predict_image, get_prediction_mask
 from src.api.utils.logger import logger
 from src.api.utils.dependencies import inject_models
 from fastapi.responses import StreamingResponse
@@ -175,24 +175,38 @@ async def perform_ela(image: UploadFile = File(...)):
 
     return StreamingResponse(buffer, media_type="image/png")
 
-
-
-# @router.post("/heatmap/forgery")
-# async def create_forgery_heatmap(file: UploadFile = File(...), models: dict = Depends(inject_models)):
+@router.post("/heatmap/forgery")
+async def create_forgery_heatmap(file: UploadFile = File(...), models: dict = Depends(inject_models)):
+    """
+    Generate a forgery heatmap for the uploaded image
+    :param file: The uploaded image file
+    :param models: The pre-trained models (injected)
+    :returns: A PNG image with the forgery heatmap overlay
+    """
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Invalid image format")
 
-    image_data = await file.read()
-    image = Image.open(io.BytesIO(image_data)).convert("RGB")
+    logger.info(f"Generating forgery heatmap for image: {file.filename}")
+    
+    try:
+        # Read and process the image
+        image_data = await file.read()
+        image = Image.open(io.BytesIO(image_data)).convert("RGB")
 
-    # Generate heatmap prediction mask
-    prediction_mask = get_prediction_mask(image, models["cnn_model"], models["svm_model"])
+        # Generate heatmap prediction mask
+        prediction_mask = get_prediction_mask(image, models["cnn_model"], models["svm_model"])
 
-    # Overlay heatmap on image
-    from src.api.services.heatmap import generate_forgery_heatmap
-    heatmap_image = generate_forgery_heatmap(image, prediction_mask)
+        # Overlay heatmap on image
+        heatmap_image = generate_forgery_heatmap(image, prediction_mask)
 
-    buffer = io.BytesIO()
-    heatmap_image.save(buffer, format="PNG")
-    buffer.seek(0)
-    return StreamingResponse(buffer, media_type="image/png")
+        # Return the image as a streaming response
+        buffer = io.BytesIO()
+        heatmap_image.save(buffer, format="PNG")
+        buffer.seek(0)
+        
+        logger.info(f"Forgery heatmap generated successfully for: {file.filename}")
+        return StreamingResponse(buffer, media_type="image/png")
+    
+    except Exception as e:
+        logger.error(f"Error generating forgery heatmap: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error generating heatmap: {str(e)}")

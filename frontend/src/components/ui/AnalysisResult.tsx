@@ -7,6 +7,7 @@ import {
   FaBrain,
   FaDownload,
   FaEye,
+  FaHeatmap,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 
@@ -23,6 +24,7 @@ interface AnalysisResult {
   filename: string;
   ela_path?: string;
   ela_image_url?: string;
+  heatmap_path?: string;
   ensemble_detail?: {
     ensemble_size: number;
     tampered_votes: number;
@@ -39,28 +41,36 @@ interface AnalysisResult {
 interface AnalysisResultProps {
   result: AnalysisResult;
   apiBaseUrl: string;
+  originalImage?: string;
+  onReset: () => void;
 }
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({
   result,
   apiBaseUrl,
+  originalImage,
+  onReset,
 }) => {
   const [imageLoadError, setImageLoadError] = useState({
     original: false,
     ela: false,
+    heatmap: false,
   });
 
   // Get the ELA image URL (prefer ela_image_url over ela_path)
   const elaImageUrl = result.ela_image_url || result.ela_path;
+  
+  // Get the heatmap image URL
+  const heatmapImageUrl = result.heatmap_path;
 
   // Get original image URL
-  const originalImageUrl = result.input_image_path
+  const originalImageUrl = originalImage || (result.input_image_path
     ? result.input_image_path.startsWith("blob:")
       ? result.input_image_path
       : `${apiBaseUrl}${result.input_image_path.startsWith("/") ? "" : "/"}${
           result.input_image_path
         }`
-    : null;
+    : null);
 
   // Function to download image
   const downloadImage = async (imageUrl: string, filename: string) => {
@@ -121,6 +131,11 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
             <FaInfoCircle className="text-3xl mr-3" />
             <h2 className="text-2xl font-bold">ELA Analysis Complete</h2>
           </div>
+        ) : heatmapImageUrl ? (
+          <div className="flex items-center text-red-500 dark:text-red-400">
+            <FaHeatmap className="text-3xl mr-3" />
+            <h2 className="text-2xl font-bold">Forgery Heatmap Generated</h2>
+          </div>
         ) : (
           <div className="flex items-center text-green-500 dark:text-green-400">
             <FaCheckCircle className="text-3xl mr-3" />
@@ -154,7 +169,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
       )}
 
       {/* Image Comparison Section */}
-      {elaImageUrl && (
+      {(elaImageUrl || heatmapImageUrl) && (
         <motion.div className="mb-6" variants={itemVariants}>
           <h3 className="text-xl font-medium mb-4 text-gray-800 dark:text-gray-200">
             Analysis Visualization
@@ -212,66 +227,111 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
               )}
             </div>
 
-            {/* ELA Visualization */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-              <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-900">
-                <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Error Level Analysis
-                </h5>
-                {!imageLoadError.ela && (
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => window.open(elaImageUrl, "_blank")}
-                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                      title="Open in new tab"
-                    >
-                      <FaEye className="text-xs" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        downloadImage(elaImageUrl, `ela_${result.filename}`)
-                      }
-                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                      title="Download ELA image"
-                    >
-                      <FaDownload className="text-xs" />
-                    </button>
+            {/* ELA or Heatmap Visualization */}
+            {elaImageUrl ? (
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-900">
+                  <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Error Level Analysis
+                  </h5>
+                  {!imageLoadError.ela && (
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => window.open(elaImageUrl, "_blank")}
+                        className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        title="Open in new tab"
+                      >
+                        <FaEye className="text-xs" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          downloadImage(elaImageUrl, `ela_${result.filename}`)
+                        }
+                        className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        title="Download ELA image"
+                      >
+                        <FaDownload className="text-xs" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {!imageLoadError.ela ? (
+                  <img
+                    src={elaImageUrl}
+                    alt="Error Level Analysis visualization"
+                    className="w-full h-auto object-contain bg-gray-100 dark:bg-gray-800 max-h-[400px]"
+                    onError={() =>
+                      setImageLoadError((prev) => ({ ...prev, ela: true }))
+                    }
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] bg-gray-100 dark:bg-gray-800 p-4">
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Failed to load ELA visualization
+                    </p>
                   </div>
                 )}
               </div>
-
-              {!imageLoadError.ela ? (
-                <img
-                  src={elaImageUrl}
-                  alt="Error Level Analysis visualization"
-                  className="w-full h-auto object-contain bg-gray-100 dark:bg-gray-800 max-h-[400px]"
-                  onError={() =>
-                    setImageLoadError((prev) => ({ ...prev, ela: true }))
-                  }
-                />
-              ) : (
-                <div className="flex items-center justify-center h-[300px] bg-gray-100 dark:bg-gray-800 p-4">
-                  <p className="text-gray-500 dark:text-gray-400 text-center">
-                    Failed to load ELA visualization
-                  </p>
+            ) : heatmapImageUrl ? (
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-900">
+                  <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Forgery Heatmap
+                  </h5>
+                  {!imageLoadError.heatmap && (
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => window.open(heatmapImageUrl, "_blank")}
+                        className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        title="Open in new tab"
+                      >
+                        <FaEye className="text-xs" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          downloadImage(heatmapImageUrl, `heatmap_${result.filename}`)
+                        }
+                        className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        title="Download heatmap image"
+                      >
+                        <FaDownload className="text-xs" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* ELA Explanation */}
-          <div className="mt-4">
-            <div className="flex items-start text-gray-600 dark:text-gray-400">
-              <FaInfoCircle className="text-blue-500 dark:text-blue-400 mt-1 mr-2 flex-shrink-0" />
-              <p className="text-sm">
-                Error Level Analysis identifies areas with different compression
-                levels, which can indicate manipulation. Bright areas in the ELA
-                image may indicate potential tampering.
-              </p>
-            </div>
+                {!imageLoadError.heatmap ? (
+                  <img
+                    src={heatmapImageUrl}
+                    alt="Forgery heatmap visualization"
+                    className="w-full h-auto object-contain bg-gray-100 dark:bg-gray-800 max-h-[400px]"
+                    onError={() =>
+                      setImageLoadError((prev) => ({ ...prev, heatmap: true }))
+                    }
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] bg-gray-100 dark:bg-gray-800 p-4">
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Failed to load heatmap visualization
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         </motion.div>
       )}
+
+      {/* Reset Button */}
+      <motion.div className="mt-6 text-center" variants={itemVariants}>
+        <button
+          onClick={onReset}
+          className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2 px-6 rounded-lg transition-colors"
+        >
+          Analyze Another Image
+        </button>
+      </motion.div>
 
       {/* Technical Details */}
       <motion.div
