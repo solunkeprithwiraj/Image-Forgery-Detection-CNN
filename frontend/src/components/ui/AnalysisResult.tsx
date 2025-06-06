@@ -1,37 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaInfoCircle,
-  FaCameraRetro,
   FaBrain,
+  FaDownload,
+  FaEye,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 
-// Define visualization types - now only ELA
-type VisualizationType = "ela";
-
-// Map visualization types to their icons
-const visualizationIcons: Record<VisualizationType, React.ReactNode> = {
-  ela: <FaCameraRetro className="mr-2" />,
-};
-
-// Map visualization types to their display names
-const visualizationLabels: Record<VisualizationType, string> = {
-  ela: "Error Level Analysis",
-};
-
-// Define the result structure
 interface AnalysisResult {
-  is_tampered: boolean;
-  prediction: number; 
+  is_tampered?: boolean;
+  prediction: number;
+  prediction_label: string;
   confidence: number;
-  message: string;
-  method: string;
-  timestamp: string;
-  input_image_path: string;
+  processing_time?: number;
+  message?: string;
+  method?: string;
+  timestamp?: string;
+  input_image_path?: string;
+  filename: string;
   ela_path?: string;
+  ela_image_url?: string;
   ensemble_detail?: {
     ensemble_size: number;
     tampered_votes: number;
@@ -54,157 +45,40 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
   result,
   apiBaseUrl,
 }) => {
-
-  // Determine which visualizations are available - now only checks for ELA
-  const getAvailableVisualizations = (): VisualizationType[] => {
-    const visualizations: VisualizationType[] = [];
-    if (result.ela_path) visualizations.push("ela");
-    return visualizations;
-  };
-
-  const availableVisualizations = getAvailableVisualizations();
-
-  // Debug logs
-  console.log("Available visualization paths:", {
-    ela: result.ela_path || null,
+  const [imageLoadError, setImageLoadError] = useState({
+    original: false,
+    ela: false,
   });
-  console.log("Available visualization types:", availableVisualizations);
 
-  // Select the first available visualization by default
-  const [activeTab, setActiveTab] = useState<VisualizationType | null>(
-    availableVisualizations.length > 0 ? availableVisualizations[0] : null
-  );
+  // Get the ELA image URL (prefer ela_image_url over ela_path)
+  const elaImageUrl = result.ela_image_url || result.ela_path;
 
-  // Track image loading errors
-  const [imageLoadError] = useState<Record<string, boolean>>({});
+  // Get original image URL
+  const originalImageUrl = result.input_image_path
+    ? result.input_image_path.startsWith("blob:")
+      ? result.input_image_path
+      : `${apiBaseUrl}${result.input_image_path.startsWith("/") ? "" : "/"}${
+          result.input_image_path
+        }`
+    : null;
 
-  // Update active tab when available visualizations change
-  useEffect(() => {
-    if (
-      availableVisualizations.length > 0 &&
-      activeTab &&
-      !availableVisualizations.includes(activeTab)
-    ) {
-      setActiveTab(availableVisualizations[0]);
-    }
-  }, [availableVisualizations, activeTab]);
-
-  // Get the path for the active visualization
-  const getActiveVisualizationPath = (): string | undefined => {
-    if (!activeTab) return undefined;
-    return result.ela_path;
-  };
-
-  const activeVisualizationPath = getActiveVisualizationPath();
-
-  // Format the image URL
-  const formatImageUrl = (path: string): string => {
-    if (!path) return "";
-
-    // Replace backslashes with forward slashes for URL compatibility
-    const normalizedPath = path.replace(/\\/g, "/");
-
-    // Handle TIFF files
-    if (
-      normalizedPath.toLowerCase().endsWith(".tif") ||
-      normalizedPath.toLowerCase().endsWith(".tiff")
-    ) {
-      console.log("Converting TIFF file for browser display:", normalizedPath);
-
-      // Remove any leading slashes to prevent double slashes in URL
-      let cleanPath = normalizedPath;
-      if (cleanPath.startsWith("/")) {
-        cleanPath = cleanPath.substring(1);
-      }
-
-      // Remove /static/ prefix if present to avoid path duplication
-      if (cleanPath.startsWith("static/")) {
-        cleanPath = cleanPath.substring(7);
-      }
-
-      return `${apiBaseUrl}/api/view-tiff/${cleanPath}`;
-    }
-
-    // Handle other files
-    if (normalizedPath.startsWith("http")) {
-      return normalizedPath;
-    }
-
-    // If the path already contains /static/ or starts with /static/
-    if (
-      normalizedPath.includes("/static/") ||
-      normalizedPath.startsWith("/static/")
-    ) {
-      // Make sure we have the full URL with apiBaseUrl
-      const staticPath = normalizedPath.includes("/static/")
-        ? normalizedPath
-        : normalizedPath.replace("/static", "");
-      return `${apiBaseUrl}${staticPath}`;
-    }
-
-    // For paths that don't have /static/ but might start with /
-    if (normalizedPath.startsWith("/")) {
-      return `${apiBaseUrl}${normalizedPath}`;
-    }
-
-    // For paths with no leading slash, add the /static/ prefix
-    return `${apiBaseUrl}/static/${normalizedPath}`;
-  };
-
-  // Function to check if an image exists
-  const checkImageExists = async (path: string): Promise<boolean> => {
+  // Function to download image
+  const downloadImage = async (imageUrl: string, filename: string) => {
     try {
-      // Remove /static/ if present
-      const cleanPath = path.startsWith("/static/") ? path.substring(8) : path;
-
-      // Use the debug endpoint to check if the image exists
-      const response = await fetch(
-        `${apiBaseUrl}/api/debug-image-path?path=${encodeURIComponent(
-          cleanPath
-        )}`
-      );
-
-      if (!response.ok) {
-        console.error(
-          `Server returned ${response.status}: ${response.statusText}`
-        );
-        return false;
-      }
-
-      const data = await response.json();
-      console.log("Server response for image check:", data);
-      return data.exists && data.is_file && data.size > 0;
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (error) {
-      console.error("Error checking image:", error);
-      return false;
+      console.error("Error downloading image:", error);
+      alert("Failed to download image");
     }
-  };
-
-  // Function to check parent directory contents
-  const checkDirectoryContents = async () => {
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/list-directory`);
-      if (!response.ok) {
-        console.error("Failed to list directory:", response.statusText);
-        return;
-      }
-
-      const data = await response.json();
-      console.log("Directory contents:", data);
-      alert(`Found ${data.files.length} files in uploads directory`);
-    } catch (error) {
-      console.error("Error listing directory:", error);
-      if (error instanceof Error) {
-        alert(`Error: ${error.message}`);
-      } else {
-        alert("An unknown error occurred");
-      }
-    }
-  };
-
-  // Get visualization description
-  const getVisualizationDescription = (type: VisualizationType): string => {
-    return "Error Level Analysis identifies areas with different compression levels, which can indicate manipulation. (For some images ELA will not be available)";
   };
 
   // Animation variants
@@ -242,6 +116,11 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
             <FaExclamationTriangle className="text-3xl mr-3" />
             <h2 className="text-2xl font-bold">Manipulation Detected</h2>
           </div>
+        ) : elaImageUrl ? (
+          <div className="flex items-center text-blue-500 dark:text-blue-400">
+            <FaInfoCircle className="text-3xl mr-3" />
+            <h2 className="text-2xl font-bold">ELA Analysis Complete</h2>
+          </div>
         ) : (
           <div className="flex items-center text-green-500 dark:text-green-400">
             <FaCheckCircle className="text-3xl mr-3" />
@@ -251,151 +130,148 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
       </motion.div>
 
       {/* Confidence Bar */}
-      <motion.div className="mb-6" variants={itemVariants}>
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Confidence
-          </span>
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {Math.round(result.confidence * 100)}%
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-          <div
-            className={`h-2.5 rounded-full ${
-              result.is_tampered
-                ? "bg-red-500 dark:bg-red-400"
-                : "bg-green-500 dark:bg-green-400"
-            }`}
-            style={{ width: `${Math.round(result.confidence * 100)}%` }}
-          ></div>
-        </div>
-      </motion.div>
+      {result.confidence > 0 && result.prediction !== 0 && (
+        <motion.div className="mb-6" variants={itemVariants}>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Confidence
+            </span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {Math.round(result.confidence * 100)}%
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+            <div
+              className={`h-2.5 rounded-full ${
+                result.is_tampered
+                  ? "bg-red-500 dark:bg-red-400"
+                  : "bg-green-500 dark:bg-green-400"
+              }`}
+              style={{ width: `${Math.round(result.confidence * 100)}%` }}
+            ></div>
+          </div>
+        </motion.div>
+      )}
 
-      {/* Visualization Section */}
-      <motion.div className="mb-6" variants={itemVariants}>
-        <div className="flex flex-col mb-4">
-          <h3 className="text-xl font-medium mb-2 text-gray-800 dark:text-gray-200">
-            Visualization
+      {/* Image Comparison Section */}
+      {elaImageUrl && (
+        <motion.div className="mb-6" variants={itemVariants}>
+          <h3 className="text-xl font-medium mb-4 text-gray-800 dark:text-gray-200">
+            Analysis Visualization
           </h3>
 
-          {/* Message about visualizations */}
-          <div className="mb-4">
-            {availableVisualizations.length === 0 && (
-              <div className="text-gray-600 dark:text-gray-400 mb-2">
-                No visualizations available for this analysis.
-              </div>
-            )}
-
-            {availableVisualizations.length === 1 && (
-              <div className="text-gray-600 dark:text-gray-400 mb-2">
-                Showing {visualizationLabels[availableVisualizations[0]]}{" "}
-                visualization.
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Visualization Image */}
-        {activeTab && activeVisualizationPath && (
-          <div className="mt-4">
-            <h4 className="text-md font-medium mb-2 text-gray-700 dark:text-gray-300">
-              Side-by-side Comparison
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Original uploaded image */}
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                <h5 className="text-sm font-medium p-2 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Original Image */}
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-900">
+                <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Original Image
                 </h5>
-                <img
-                  src={formatImageUrl(result.input_image_path)}
-                  alt="Original uploaded image"
-                  className="w-full h-auto object-contain bg-gray-100 dark:bg-gray-800 max-h-[300px]"
-                />
-              </div>
-
-              {/* Visualization image */}
-              <div className="relative border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                <h5 className="text-sm font-medium p-2 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300">
-                  {visualizationLabels[activeTab]} Visualization
-                </h5>
-                <img
-                  src={formatImageUrl(activeVisualizationPath)}
-                  alt={`${visualizationLabels[activeTab]} visualization of the image analysis`}
-                  className="w-full h-auto object-contain bg-gray-100 dark:bg-gray-800 max-h-[300px]"
-                  onError={async () => {
-                    // Log the error
-                    console.error(
-                      `Failed to load image: ${activeVisualizationPath}`
-                    );
-
-                    // Check if the image exists on the server using our endpoint
-                    const exists = await checkImageExists(
-                      activeVisualizationPath
-                    );
-                    console.log(
-                      `Image ${activeVisualizationPath} exists: ${exists}`
-                    );
-                  }}
-                />
-                {imageLoadError[activeTab] && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800">
-                    <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
-                      Image Load Error
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      Failed to load the {visualizationLabels[activeTab]}{" "}
-                      visualization.
-                    </p>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 p-2 bg-gray-100 dark:bg-gray-700 rounded-md">
-                      Path: {activeVisualizationPath}
-                    </div>
-                    <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                      <button
-                        onClick={async () => {
-                          // Try to check if the image exists
-                          const exists = await checkImageExists(
-                            activeVisualizationPath
-                          );
-                          alert(
-                            `Image check result: ${
-                              exists
-                                ? "Image exists on server"
-                                : "Image does not exist on server"
-                            }`
-                          );
-                        }}
-                        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-                      >
-                        Check Image Availability
-                      </button>
-                      <button
-                        onClick={checkDirectoryContents}
-                        className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
-                      >
-                        Check Uploads Directory
-                      </button>
-                    </div>
+                {originalImageUrl && !imageLoadError.original && (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => window.open(originalImageUrl, "_blank")}
+                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      title="Open in new tab"
+                    >
+                      <FaEye className="text-xs" />
+                    </button>
+                    <button
+                      onClick={() =>
+                        downloadImage(
+                          originalImageUrl,
+                          `original_${result.filename}`
+                        )
+                      }
+                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      title="Download image"
+                    >
+                      <FaDownload className="text-xs" />
+                    </button>
                   </div>
                 )}
               </div>
+
+              {originalImageUrl && !imageLoadError.original ? (
+                <img
+                  src={originalImageUrl}
+                  alt="Original uploaded image"
+                  className="w-full h-auto object-contain bg-gray-100 dark:bg-gray-800 max-h-[400px]"
+                  onError={() =>
+                    setImageLoadError((prev) => ({ ...prev, original: true }))
+                  }
+                />
+              ) : (
+                <div className="flex items-center justify-center h-[300px] bg-gray-100 dark:bg-gray-800 p-4">
+                  <p className="text-gray-500 dark:text-gray-400 text-center">
+                    {imageLoadError.original
+                      ? "Failed to load original image"
+                      : result.filename}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* ELA Visualization */}
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-900">
+                <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Error Level Analysis
+                </h5>
+                {!imageLoadError.ela && (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => window.open(elaImageUrl, "_blank")}
+                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      title="Open in new tab"
+                    >
+                      <FaEye className="text-xs" />
+                    </button>
+                    <button
+                      onClick={() =>
+                        downloadImage(elaImageUrl, `ela_${result.filename}`)
+                      }
+                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      title="Download ELA image"
+                    >
+                      <FaDownload className="text-xs" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {!imageLoadError.ela ? (
+                <img
+                  src={elaImageUrl}
+                  alt="Error Level Analysis visualization"
+                  className="w-full h-auto object-contain bg-gray-100 dark:bg-gray-800 max-h-[400px]"
+                  onError={() =>
+                    setImageLoadError((prev) => ({ ...prev, ela: true }))
+                  }
+                />
+              ) : (
+                <div className="flex items-center justify-center h-[300px] bg-gray-100 dark:bg-gray-800 p-4">
+                  <p className="text-gray-500 dark:text-gray-400 text-center">
+                    Failed to load ELA visualization
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        {/* Visualization explanation */}
-        {activeTab && !imageLoadError[activeTab] && (
+          {/* ELA Explanation */}
           <div className="mt-4">
             <div className="flex items-start text-gray-600 dark:text-gray-400">
-              <FaInfoCircle className="text-blue-500 dark:text-blue-400 mt-1 mr-2" />
+              <FaInfoCircle className="text-blue-500 dark:text-blue-400 mt-1 mr-2 flex-shrink-0" />
               <p className="text-sm">
-                {getVisualizationDescription(activeTab)}
+                Error Level Analysis identifies areas with different compression
+                levels, which can indicate manipulation. Bright areas in the ELA
+                image may indicate potential tampering.
               </p>
             </div>
           </div>
-        )}
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* Technical Details */}
       <motion.div
@@ -408,21 +284,26 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-              <strong>Detection Method:</strong> {result.method}
+              <strong>Detection Method:</strong>{" "}
+              {result.method || "ELA Analysis"}
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
               <strong>Confidence Score:</strong>{" "}
-              {(result.confidence * 100).toFixed(2)}%
+              {result.confidence > 0
+                ? (result.confidence * 100).toFixed(2) + "%"
+                : "N/A"}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
               <strong>Image Status:</strong>{" "}
-              {result.prediction == 1 ? "Manipulated" : "Authentic"}
+              {result.prediction == 1
+                ? "Potentially Manipulated"
+                : "Analysis Complete"}
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               <strong>Analysis Date:</strong>{" "}
-              {dayjs().format("YYYY-MM-DD")}
+              {dayjs().format("YYYY-MM-DD HH:mm")}
             </p>
           </div>
         </div>
@@ -483,44 +364,33 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.isArray(result.ensemble_detail.model_predictions) ? (
-                      result.ensemble_detail.model_predictions.map(
-                        (prediction, index) => (
-                          <tr
-                            key={index}
-                            className="border-t border-gray-100 dark:border-gray-800"
-                          >
-                            <td className="px-2 py-1 text-gray-600 dark:text-gray-400 text-left">
-                              {prediction.model_name}
-                            </td>
-                            <td className="px-2 py-1 text-center">
-                              <span
-                                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                  prediction.prediction === 1
-                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                    : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                }`}
-                              >
-                                {prediction.prediction === 1
-                                  ? "Tampered"
-                                  : "Authentic"}
-                              </span>
-                            </td>
-                            <td className="px-2 py-1 text-gray-600 dark:text-gray-400 text-right">
-                              {Math.round(prediction.confidence * 100)}%
-                            </td>
-                          </tr>
-                        )
-                      )
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={3}
-                          className="px-2 py-1 text-center text-gray-500"
+                    {result.ensemble_detail.model_predictions?.map(
+                      (prediction, index) => (
+                        <tr
+                          key={index}
+                          className="border-t border-gray-100 dark:border-gray-800"
                         >
-                          No detailed predictions available
-                        </td>
-                      </tr>
+                          <td className="px-2 py-1 text-gray-600 dark:text-gray-400 text-left">
+                            {prediction.model_name}
+                          </td>
+                          <td className="px-2 py-1 text-center">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                prediction.prediction === 1
+                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                  : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                              }`}
+                            >
+                              {prediction.prediction === 1
+                                ? "Tampered"
+                                : "Authentic"}
+                            </span>
+                          </td>
+                          <td className="px-2 py-1 text-gray-600 dark:text-gray-400 text-right">
+                            {Math.round(prediction.confidence * 100)}%
+                          </td>
+                        </tr>
+                      )
                     )}
                   </tbody>
                 </table>

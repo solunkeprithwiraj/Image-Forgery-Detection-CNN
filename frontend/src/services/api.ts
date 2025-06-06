@@ -41,20 +41,29 @@ export type LocalizationMethod =
   | "mask"
   | "edge"
   | "highlight";
-export const analyzeElaImage = async (file: File) => {
+export const analyzeElaImage = async (file: File): Promise<string> => {
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("image", file);
 
-  const response = await fetch("/api/ela", {
-    method: "POST",
-    body: formData,
-  });
+  try {
+    const response = await fetch("http://localhost:8000/api/ela", {
+      method: "POST",
+      body: formData,
+    });
 
-  if (!response.ok) {
-    throw new Error("ELA analysis failed");
+    if (!response.ok) {
+      throw new Error(
+        `ELA analysis failed: ${response.status} ${response.statusText}`
+      );
+    }
+
+    // Convert the response blob to a data URL
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error("Error in ELA analysis:", error);
+    throw error;
   }
-
-  return await response.json();
 };
 
 export const analyzeImage = async (

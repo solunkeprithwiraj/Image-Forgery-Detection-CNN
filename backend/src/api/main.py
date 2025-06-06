@@ -80,7 +80,6 @@ async def health_check():
             content={"status": "unhealthy", "error": str(e)}
         )
 
-
 # Exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):

@@ -44,8 +44,7 @@ const Detect: React.FC = () => {
       setError(null);
     },
   });
-
-  const handleAnalyze = async () => {
+  const handlePredict = async () => {
     if (!file) {
       setError("Please select an image first.");
       return;
@@ -55,21 +54,68 @@ const Detect: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      // Only call ELA API
-      const elaResult = await analyzeElaImage(file);
+      const formData = new FormData();
+      formData.append("file", file);
 
-      // Set the result containing just the ELA data
-      setResult({ ela: elaResult });
+      const response = await fetch("http://localhost:8000/api/predict", {
+        method: "POST",
+        body: formData,
+      });
 
-      console.log("ELA Result:", elaResult);
+      if (!response.ok) {
+        throw new Error("Prediction failed");
+      }
+
+      const data = await response.json();
+
+      setResult({
+        filename: file.name,
+        prediction: data.prediction,
+        prediction_label: data.prediction_label,
+        confidence: data.confidence,
+        processing_time: data.processing_time,
+        ela_image_url: null, // Not used in prediction
+      });
+
+      console.log("Prediction result:", data);
     } catch (err) {
-      console.error("Error analyzing image:", err);
+      console.error("Prediction error:", err);
+      setError("An error occurred during prediction. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  const handleElaAnalysis = async () => {
+    if (!file) {
+      setError("Please select an image first.");
+      return;
+    }
+
+    setError(null);
+    setIsProcessing(true);
+
+    try {
+      const elaImageUrl = await analyzeElaImage(file);
+
+      setResult({
+        filename: file.name,
+        prediction: 0,
+        prediction_label: "Unknown",
+        confidence: 0,
+        processing_time: 0,
+        ela_image_url: elaImageUrl,
+      });
+
+      console.log("ELA Image URL:", elaImageUrl);
+    } catch (err) {
+      console.error("ELA analysis failed:", err);
       setError("An error occurred during ELA analysis. Please try again.");
     } finally {
       setIsProcessing(false);
     }
   };
-
+  
   const handleReset = () => {
     clearImage();
     setResult(null);
@@ -245,7 +291,10 @@ const Detect: React.FC = () => {
 
                         <div className="mt-6 flex justify-center">
                           <button
-                            onClick={handleAnalyze}
+                            onClick={() => {
+                              handleElaAnalysis();
+                              handlePredict();
+                            }}
                             disabled={isProcessing}
                             className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl font-semibold shadow-2xl shadow-cyan-500/25 flex items-center justify-center transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                           >
@@ -280,7 +329,6 @@ const Detect: React.FC = () => {
                             )}
                           </button>
                         </div>
-
                         {error && (
                           <div className="mt-4 p-4 bg-red-900/30 backdrop-blur-sm text-red-300 rounded-lg border border-red-500/30 text-center">
                             {error}
