@@ -7,7 +7,11 @@ import {
   FaBrain,
   FaDownload,
   FaEye,
-  // FaHeatmap,
+  FaCompressAlt,
+  FaExpandAlt,
+  FaSync,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 
@@ -43,6 +47,8 @@ interface AnalysisResultProps {
   apiBaseUrl: string;
   originalImage?: string;
   onReset: () => void;
+  showLocalization?: boolean;
+  showEla?: boolean;
 }
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({
@@ -50,12 +56,17 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
   apiBaseUrl,
   originalImage,
   onReset,
+  showLocalization = true,
+  showEla = true,
 }) => {
   const [imageLoadError, setImageLoadError] = useState({
     original: false,
     ela: false,
     heatmap: false,
   });
+  
+  const [activeView, setActiveView] = useState<'split' | 'original' | 'analysis'>('split');
+  const [imageZoomed, setImageZoomed] = useState(false);
 
   // Get the ELA image URL (prefer ela_image_url over ela_path)
   const elaImageUrl = result.ela_image_url || result.ela_path;
@@ -111,352 +122,343 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
       transition: { type: "spring", stiffness: 100 },
     },
   };
+  
+  // Get the analysis image URL (ELA or Heatmap)
+  const analysisImageUrl = elaImageUrl || heatmapImageUrl;
+  
+  // Helper to determine which analysis is being shown
+  const analysisType = elaImageUrl ? "ELA" : heatmapImageUrl ? "Heatmap" : "";
+  
+  // Toggle view mode
+  const toggleViewMode = () => {
+    if (activeView === 'split') {
+      setActiveView('original');
+    } else if (activeView === 'original') {
+      setActiveView('analysis');
+    } else {
+      setActiveView('split');
+    }
+  };
 
   return (
     <motion.div
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8"
+      className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-6 mb-8 border border-white/20"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      {/* Result Header */}
+      {/* Result Header with Glassmorphism */}
       <motion.div className="flex items-center mb-6" variants={itemVariants}>
         {result.prediction == 1 ? (
           <div className="flex items-center text-red-500 dark:text-red-400">
             <FaExclamationTriangle className="text-3xl mr-3" />
-            <h2 className="text-2xl font-bold">Manipulation Detected</h2>
+            <h2 className="text-2xl font-bold text-white">Manipulation Detected</h2>
           </div>
         ) : elaImageUrl ? (
           <div className="flex items-center text-blue-500 dark:text-blue-400">
             <FaInfoCircle className="text-3xl mr-3" />
-            <h2 className="text-2xl font-bold">ELA Analysis Complete</h2>
+            <h2 className="text-2xl font-bold text-white">{result.prediction_label}</h2>
           </div>
         ) : heatmapImageUrl ? (
           <div className="flex items-center text-red-500 dark:text-red-400">
             <FaExclamationTriangle className="text-3xl mr-3" />
-            <h2 className="text-2xl font-bold">Forgery Heatmap Generated</h2>
+            <h2 className="text-2xl font-bold text-white">{result.prediction_label}</h2>
           </div>
         ) : (
           <div className="flex items-center text-green-500 dark:text-green-400">
             <FaCheckCircle className="text-3xl mr-3" />
-            <h2 className="text-2xl font-bold">Image Appears Authentic</h2>
+            <h2 className="text-2xl font-bold text-white">Image Appears Authentic</h2>
           </div>
         )}
       </motion.div>
 
-      {/* Confidence Bar */}
+      {/* Confidence Bar with Enhanced Styling */}
       {result.confidence > 0 && result.prediction !== 0 && (
         <motion.div className="mb-6" variants={itemVariants}>
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="text-sm font-medium text-gray-300">
               Confidence
             </span>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="text-sm font-medium text-gray-300">
               {Math.round(result.confidence * 100)}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-            <div
+          <div className="w-full bg-gray-700/50 backdrop-blur-sm rounded-full h-2.5 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.round(result.confidence * 100)}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
               className={`h-2.5 rounded-full ${
                 result.is_tampered
-                  ? "bg-red-500 dark:bg-red-400"
-                  : "bg-green-500 dark:bg-green-400"
+                  ? "bg-gradient-to-r from-red-500 to-orange-500"
+                  : "bg-gradient-to-r from-green-400 to-emerald-500"
               }`}
-              style={{ width: `${Math.round(result.confidence * 100)}%` }}
-            ></div>
+            ></motion.div>
           </div>
         </motion.div>
       )}
 
-      {/* Image Comparison Section */}
+      {/* Image Comparison Section with Glassmorphism */}
       {(elaImageUrl || heatmapImageUrl) && (
         <motion.div className="mb-6" variants={itemVariants}>
-          <h3 className="text-xl font-medium mb-4 text-gray-800 dark:text-gray-200">
-            Analysis Visualization
-          </h3>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Original Image */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-              <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-900">
-                <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Original Image
-                </h5>
-                {originalImageUrl && !imageLoadError.original && (
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => window.open(originalImageUrl, "_blank")}
-                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                      title="Open in new tab"
-                    >
-                      <FaEye className="text-xs" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        downloadImage(
-                          originalImageUrl,
-                          `original_${result.filename}`
-                        )
-                      }
-                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                      title="Download image"
-                    >
-                      <FaDownload className="text-xs" />
-                    </button>
-                  </div>
-                )}
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-medium text-gray-200">
+              {activeView === 'split' ? 'Analysis Comparison' : 
+               activeView === 'original' ? 'Original Image' : 
+               `${analysisType} Analysis`}
+            </h3>
+            
+            <div className="flex items-center gap-2">
+              {/* View Controls */}
+              <div className="flex bg-black/30 backdrop-blur-md rounded-lg p-1 border border-white/10">
+                <button 
+                  onClick={() => setActiveView('original')}
+                  className={`px-2 py-1 rounded-md text-xs ${
+                    activeView === 'original' ? 'bg-white/20 text-white' : 'text-gray-400 hover:text-white'
+                  }`}
+                  title="View Original"
+                >
+                  Original
+                </button>
+                <button 
+                  onClick={() => setActiveView('split')}
+                  className={`px-2 py-1 rounded-md text-xs ${
+                    activeView === 'split' ? 'bg-white/20 text-white' : 'text-gray-400 hover:text-white'
+                  }`}
+                  title="View Side by Side"
+                >
+                  Split
+                </button>
+                <button 
+                  onClick={() => setActiveView('analysis')}
+                  className={`px-2 py-1 rounded-md text-xs ${
+                    activeView === 'analysis' ? 'bg-white/20 text-white' : 'text-gray-400 hover:text-white'
+                  }`}
+                  title="View Analysis"
+                >
+                  {analysisType}
+                </button>
               </div>
-
-              {originalImageUrl && !imageLoadError.original ? (
-                <img
-                  src={originalImageUrl}
-                  alt="Original uploaded image"
-                  className="w-full h-auto object-contain bg-gray-100 dark:bg-gray-800 max-h-[400px]"
-                  onError={() =>
-                    setImageLoadError((prev) => ({ ...prev, original: true }))
-                  }
-                />
-              ) : (
-                <div className="flex items-center justify-center h-[300px] bg-gray-100 dark:bg-gray-800 p-4">
-                  <p className="text-gray-500 dark:text-gray-400 text-center">
-                    {imageLoadError.original
-                      ? "Failed to load original image"
-                      : result.filename}
-                  </p>
+              
+              {/* Zoom Toggle */}
+              <button
+                onClick={() => setImageZoomed(!imageZoomed)}
+                className="p-1 bg-black/30 backdrop-blur-md rounded-lg border border-white/10 text-gray-300 hover:text-white"
+                title={imageZoomed ? "Exit Fullscreen" : "Fullscreen View"}
+              >
+                {imageZoomed ? <FaCompressAlt size={14} /> : <FaExpandAlt size={14} />}
+              </button>
+              
+              {/* Cycle Views */}
+              <button
+                onClick={toggleViewMode}
+                className="p-1 bg-black/30 backdrop-blur-md rounded-lg border border-white/10 text-gray-300 hover:text-white"
+                title="Cycle Views"
+              >
+                <FaSync size={14} />
+              </button>
+              
+              {/* Download Button */}
+              {analysisImageUrl && (
+                <button
+                  onClick={() => downloadImage(analysisImageUrl, `${analysisType.toLowerCase()}_${result.filename}`)}
+                  className="p-1 bg-black/30 backdrop-blur-md rounded-lg border border-white/10 text-gray-300 hover:text-white"
+                  title={`Download ${analysisType}`}
+                >
+                  <FaDownload size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {/* Image Container with Enhanced Glassmorphism */}
+          <div 
+            className={`
+              relative overflow-hidden transition-all duration-300 ease-in-out
+              ${imageZoomed ? 'fixed inset-0 z-50 p-4 bg-black/80 flex items-center justify-center' : 'rounded-xl bg-black/20 backdrop-blur-sm border border-white/10'}
+            `}
+          >
+            {/* Close Button for Fullscreen */}
+            {imageZoomed && (
+              <button
+                onClick={() => setImageZoomed(false)}
+                className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full z-10"
+              >
+                <FaCompressAlt />
+              </button>
+            )}
+            
+            {/* Image View */}
+            <div className={`
+              w-full h-full flex 
+              ${activeView === 'split' ? 'flex-row' : 'flex-col'} 
+              ${activeView === 'split' ? 'divide-x divide-white/20' : 'divide-y divide-white/20'} 
+              overflow-hidden
+            `}>
+              {/* Original Image Section */}
+              {(activeView === 'original' || activeView === 'split') && originalImageUrl && (
+                <div className={`
+                  relative 
+                  ${activeView === 'split' ? 'w-1/2' : 'w-full'} 
+                  ${activeView === 'split' ? 'h-full' : 'h-full'} 
+                  bg-neutral-900/30 backdrop-blur-sm
+                  overflow-hidden
+                `}>
+                  <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                    Original
+                  </div>
+                  <img 
+                    src={originalImageUrl} 
+                    alt="Original" 
+                    className="w-full h-full object-contain"
+                    onError={() => setImageLoadError({...imageLoadError, original: true})}
+                  />
+                  {imageLoadError.original && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-red-400">
+                      Failed to load original image
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Analysis Image Section */}
+              {(activeView === 'analysis' || activeView === 'split') && analysisImageUrl && (
+                <div className={`
+                  relative 
+                  ${activeView === 'split' ? 'w-1/2' : 'w-full'} 
+                  ${activeView === 'split' ? 'h-full' : 'h-full'} 
+                  bg-neutral-900/30 backdrop-blur-sm
+                  overflow-hidden
+                `}>
+                  <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                    {analysisType} Analysis
+                  </div>
+                  <img 
+                    src={analysisImageUrl} 
+                    alt={`${analysisType} Analysis`} 
+                    className="w-full h-full object-contain"
+                    onError={() => setImageLoadError({
+                      ...imageLoadError, 
+                      ela: elaImageUrl ? true : false,
+                      heatmap: heatmapImageUrl ? true : false
+                    })}
+                  />
+                  {(elaImageUrl && imageLoadError.ela) || (heatmapImageUrl && imageLoadError.heatmap) ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-red-400">
+                      Failed to load analysis image
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>
-
-            {/* ELA or Heatmap Visualization */}
-            {elaImageUrl ? (
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-900">
-                  <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Error Level Analysis
-                  </h5>
-                  {!imageLoadError.ela && (
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => window.open(elaImageUrl, "_blank")}
-                        className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                        title="Open in new tab"
-                      >
-                        <FaEye className="text-xs" />
-                      </button>
-                      <button
-                        onClick={() =>
-                          downloadImage(elaImageUrl, `ela_${result.filename}`)
-                        }
-                        className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                        title="Download ELA image"
-                      >
-                        <FaDownload className="text-xs" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {!imageLoadError.ela ? (
-                  <img
-                    src={elaImageUrl}
-                    alt="Error Level Analysis visualization"
-                    className="w-full h-auto object-contain bg-gray-100 dark:bg-gray-800 max-h-[400px]"
-                    onError={() =>
-                      setImageLoadError((prev) => ({ ...prev, ela: true }))
-                    }
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-[300px] bg-gray-100 dark:bg-gray-800 p-4">
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Failed to load ELA visualization
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : heatmapImageUrl ? (
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-900">
-                  <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Forgery Heatmap
-                  </h5>
-                  {!imageLoadError.heatmap && (
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => window.open(heatmapImageUrl, "_blank")}
-                        className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                        title="Open in new tab"
-                      >
-                        <FaEye className="text-xs" />
-                      </button>
-                      <button
-                        onClick={() =>
-                          downloadImage(heatmapImageUrl, `heatmap_${result.filename}`)
-                        }
-                        className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                        title="Download heatmap image"
-                      >
-                        <FaDownload className="text-xs" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {!imageLoadError.heatmap ? (
-                  <img
-                    src={heatmapImageUrl}
-                    alt="Forgery heatmap visualization"
-                    className="w-full h-auto object-contain bg-gray-100 dark:bg-gray-800 max-h-[400px]"
-                    onError={() =>
-                      setImageLoadError((prev) => ({ ...prev, heatmap: true }))
-                    }
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-[300px] bg-gray-100 dark:bg-gray-800 p-4">
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Failed to load heatmap visualization
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : null}
           </div>
         </motion.div>
       )}
 
-      {/* Reset Button */}
-      <motion.div className="mt-6 text-center" variants={itemVariants}>
-        <button
-          onClick={onReset}
-          className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2 px-6 rounded-lg transition-colors"
-        >
-          Analyze Another Image
-        </button>
-      </motion.div>
-
-      {/* Technical Details */}
-      <motion.div
-        className="rounded-lg bg-gray-50 dark:bg-gray-700 p-4"
-        variants={itemVariants}
-      >
-        <h3 className="text-lg font-medium mb-3 text-gray-800 dark:text-gray-200">
-          Technical Details
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-              <strong>Detection Method:</strong>{" "}
-              {result.method || "ELA Analysis"}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-              <strong>Confidence Score:</strong>{" "}
-              {result.confidence > 0
-                ? (result.confidence * 100).toFixed(2) + "%"
-                : "N/A"}
-            </p>
+      {/* Analysis Details with Glassmorphism */}
+      <motion.div variants={itemVariants} className="space-y-4">
+        {/* Basic Details */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10">
+            <div className="text-sm text-gray-400 mb-1">Filename</div>
+            <div className="text-gray-200 truncate">{result.filename}</div>
           </div>
-          <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-              <strong>Image Status:</strong>{" "}
-              {result.prediction == 1
-                ? "Potentially Manipulated"
-                : "Analysis Complete"}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              <strong>Analysis Date:</strong>{" "}
-              {dayjs().format("YYYY-MM-DD HH:mm")}
-            </p>
-          </div>
+          
+          {result.processing_time && (
+            <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10">
+              <div className="text-sm text-gray-400 mb-1">Processing Time</div>
+              <div className="text-gray-200">{result.processing_time.toFixed(2)}s</div>
+            </div>
+          )}
+          
+          {result.timestamp && (
+            <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10">
+              <div className="text-sm text-gray-400 mb-1">Analysis Time</div>
+              <div className="text-gray-200">{dayjs(result.timestamp).format('YYYY-MM-DD HH:mm:ss')}</div>
+            </div>
+          )}
+          
+          {result.method && (
+            <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10">
+              <div className="text-sm text-gray-400 mb-1">Detection Method</div>
+              <div className="text-gray-200">{result.method}</div>
+            </div>
+          )}
         </div>
-
-        {/* Ensemble Details */}
+        
+        {/* Ensemble Details if available */}
         {result.ensemble_detail && (
-          <div className="mt-4 border-t border-gray-200 dark:border-gray-600 pt-4">
-            <h4 className="text-md font-medium mb-2 text-gray-700 dark:text-gray-300 flex items-center">
-              <FaBrain className="mr-2 text-blue-500 dark:text-blue-400" />
-              Ensemble Analysis Details
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-              <div className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 text-center">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Models Used
-                </div>
-                <div className="font-semibold text-gray-900 dark:text-white">
-                  {result.ensemble_detail.ensemble_size}
-                </div>
+          <motion.div 
+            variants={itemVariants}
+            className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10 mt-4"
+          >
+            <h3 className="text-lg font-medium text-gray-200 mb-3 flex items-center">
+              <FaBrain className="mr-2 text-purple-400" /> Ensemble Model Details
+            </h3>
+            
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="bg-black/30 backdrop-blur-md rounded-lg p-3 border border-white/10">
+                <div className="text-sm text-gray-400">Models</div>
+                <div className="text-xl font-medium text-white">{result.ensemble_detail.ensemble_size}</div>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 text-center">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Tampered Votes
-                </div>
-                <div className="font-semibold text-gray-900 dark:text-white">
-                  {result.ensemble_detail.tampered_votes}
-                </div>
+              
+              <div className="bg-black/30 backdrop-blur-md rounded-lg p-3 border border-white/10">
+                <div className="text-sm text-gray-400">Tampered Votes</div>
+                <div className="text-xl font-medium text-red-400">{result.ensemble_detail.tampered_votes}</div>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 text-center">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Authentic Votes
-                </div>
-                <div className="font-semibold text-gray-900 dark:text-white">
-                  {result.ensemble_detail.authentic_votes}
-                </div>
-              </div>
-              <div className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 text-center">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Consensus
-                </div>
-                <div className="font-semibold text-gray-900 dark:text-white">
-                  {result.ensemble_detail.consensus_level}
-                </div>
+              
+              <div className="bg-black/30 backdrop-blur-md rounded-lg p-3 border border-white/10">
+                <div className="text-sm text-gray-400">Authentic Votes</div>
+                <div className="text-xl font-medium text-green-400">{result.ensemble_detail.authentic_votes}</div>
               </div>
             </div>
-
-            <details className="text-sm">
-              <summary className="cursor-pointer text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
-                View Model Predictions
-              </summary>
-              <div className="mt-2 overflow-auto max-h-60 bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700">
-                <table className="w-full text-xs">
-                  <thead className="bg-gray-50 dark:bg-gray-900">
-                    <tr>
-                      <th className="px-2 py-1 text-left">Model</th>
-                      <th className="px-2 py-1 text-center">Prediction</th>
-                      <th className="px-2 py-1 text-right">Confidence</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.ensemble_detail.model_predictions?.map(
-                      (prediction, index) => (
-                        <tr
-                          key={index}
-                          className="border-t border-gray-100 dark:border-gray-800"
-                        >
-                          <td className="px-2 py-1 text-gray-600 dark:text-gray-400 text-left">
-                            {prediction.model_name}
-                          </td>
-                          <td className="px-2 py-1 text-center">
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                prediction.prediction === 1
-                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                  : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                              }`}
-                            >
-                              {prediction.prediction === 1
-                                ? "Tampered"
-                                : "Authentic"}
-                            </span>
-                          </td>
-                          <td className="px-2 py-1 text-gray-600 dark:text-gray-400 text-right">
-                            {Math.round(prediction.confidence * 100)}%
-                          </td>
-                        </tr>
-                      )
-                    )}
-                  </tbody>
-                </table>
+            
+            <div className="mb-4">
+              <div className="text-sm text-gray-400 mb-1">Consensus Level</div>
+              <div className={`text-lg font-medium ${
+                result.ensemble_detail.consensus_level === 'Strong' ? 'text-green-400' :
+                result.ensemble_detail.consensus_level === 'Moderate' ? 'text-yellow-400' :
+                'text-red-400'
+              }`}>
+                {result.ensemble_detail.consensus_level} Consensus
               </div>
-            </details>
-          </div>
+            </div>
+            
+            <div>
+              <div className="text-sm text-gray-400 mb-2">Individual Model Predictions</div>
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                {result.ensemble_detail.model_predictions.map((model, idx) => (
+                  <div 
+                    key={idx} 
+                    className="bg-black/20 backdrop-blur-md rounded-lg p-2 border border-white/10 flex justify-between items-center"
+                  >
+                    <div className="text-gray-300 text-sm">{model.model_name}</div>
+                    <div className="flex items-center">
+                      <div className={`text-sm font-medium ${model.prediction === 1 ? 'text-red-400' : 'text-green-400'}`}>
+                        {model.prediction === 1 ? 'Tampered' : 'Authentic'}
+                      </div>
+                      <div className="text-xs text-gray-400 ml-2">
+                        {Math.round(model.confidence * 100)}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+        
+        {/* Analysis Message if any */}
+        {result.message && (
+          <motion.div
+            variants={itemVariants}
+            className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10 mt-4"
+          >
+            <h3 className="text-lg font-medium text-gray-200 mb-2 flex items-center">
+              <FaInfoCircle className="mr-2 text-blue-400" /> Analysis Note
+            </h3>
+            <p className="text-gray-300">{result.message}</p>
+          </motion.div>
         )}
       </motion.div>
     </motion.div>

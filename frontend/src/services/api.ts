@@ -41,9 +41,23 @@ export type LocalizationMethod =
   | "mask"
   | "edge"
   | "highlight";
-export const analyzeElaImage = async (file: File): Promise<string> => {
+
+export type ELAMode = "basic" | "enhanced" | "comparison" | "zoom";
+export type HeatmapMode = "basic" | "detail" | "multi" | "composite";
+
+export const analyzeElaImage = async (
+  file: File, 
+  mode: ELAMode = "basic",
+  quality: number = 85,
+  enhanceContrast: boolean = true,
+  colorize: boolean = false
+): Promise<string> => {
   const formData = new FormData();
   formData.append("image", file);
+  formData.append("mode", mode);
+  formData.append("quality", quality.toString());
+  formData.append("enhance_contrast", enhanceContrast.toString());
+  formData.append("colorize", colorize.toString());
 
   try {
     const response = await fetch("http://localhost:8000/api/ela", {
@@ -66,9 +80,17 @@ export const analyzeElaImage = async (file: File): Promise<string> => {
   }
 };
 
-export const generateForgeryHeatmap = async (file: File): Promise<string> => {
+export const generateForgeryHeatmap = async (
+  file: File,
+  mode: HeatmapMode = "basic",
+  threshold: number = 0.5,
+  colormap: string = "jet"
+): Promise<string> => {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("mode", mode);
+  formData.append("threshold", threshold.toString());
+  formData.append("colormap", colormap);
 
   try {
     const response = await fetch("http://localhost:8000/api/heatmap/forgery", {
