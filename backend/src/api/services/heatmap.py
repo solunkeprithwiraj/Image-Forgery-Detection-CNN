@@ -72,9 +72,13 @@ def generate_forgery_heatmap(original_image: Image.Image, prediction_mask: np.nd
         
         # Create the overlay using the varying alpha
         overlay = original_np.copy()
-        np.copyto(overlay, 
-                 original_np * (1 - alpha_mask) + heatmap_color * alpha_mask, 
-                 where=(alpha_mask > 0))
+        blended = (original_np * (1 - alpha_mask) + heatmap_color * alpha_mask)
+
+# Clip and convert to uint8 to match overlay dtype
+        blended_uint8 = np.clip(blended, 0, 255).astype(np.uint8)
+
+        np.copyto(overlay, blended_uint8, where=(alpha_mask > 0))
+
     else:
         # Standard blending with fixed alpha
         beta = 1.0 - alpha

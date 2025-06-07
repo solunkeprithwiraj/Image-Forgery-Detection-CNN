@@ -296,7 +296,7 @@ const Detect: React.FC = () => {
                   </div>
 
                   {/* Analysis Options */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  <div className="flex flex-col gap-4 mb-4">
                     {/* Analysis Type Selection */}
                     <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors duration-300">
                       <h3 className="text-gray-200 font-medium mb-3 flex items-center">
