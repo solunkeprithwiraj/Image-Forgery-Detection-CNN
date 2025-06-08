@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Get the API URL from environment variables
-const API_BASE_URL = "http://localhost:8000";
+ const API_BASE_URL = "http://localhost:8000";
 
 // Create an axios instance with default config
 const api = axios.create({
@@ -215,6 +215,146 @@ export const viewTiffFile = async (tiffPath: string): Promise<string> => {
   } catch (error) {
     console.error("Error viewing TIFF:", error);
     throw error;
+  }
+};
+
+export type ForgeryType = "comprehensive" | "copy-move" | "splicing" | "inpainting" | "metadata";
+
+export const detectCopyMove = async (
+  file: File,
+  method: string = "orb"
+): Promise<{ result: any; imageUrl: string | null }> => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("method", method);
+
+    const response = await api.post("/api/detect/copy-move", formData);
+    return {
+      result: response.data,
+      imageUrl: response.data.visualization_url || null
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(`Copy-move detection failed: ${error.response.data.error || "Unknown error"}`);
+    }
+    throw new Error("Failed to connect to the server. Please try again later.");
+  }
+};
+
+export const detectSplicing = async (
+  file: File,
+  method: string = "combined"
+): Promise<{ result: any; imageUrl: string | null }> => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("method", method);
+
+    const response = await api.post("/api/detect/splicing", formData);
+    return {
+      result: response.data,
+      imageUrl: response.data.visualization_url || null
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(`Splicing detection failed: ${error.response.data.error || "Unknown error"}`);
+    }
+    throw new Error("Failed to connect to the server. Please try again later.");
+  }
+};
+
+export const detectInpainting = async (
+  file: File,
+  method: string = "combined"
+): Promise<{ result: any; imageUrl: string | null }> => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("method", method);
+
+    const response = await api.post("/api/detect/inpainting", formData);
+    return {
+      result: response.data,
+      imageUrl: response.data.visualization_url || null
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(`Inpainting detection failed: ${error.response.data.error || "Unknown error"}`);
+    }
+    throw new Error("Failed to connect to the server. Please try again later.");
+  }
+};
+
+export const analyzeMetadata = async (
+  file: File,
+  detailed: boolean = false
+): Promise<any> => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("detailed", detailed.toString());
+
+    const response = await api.post("/api/analyze/metadata", formData);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(`Metadata analysis failed: ${error.response.data.error || "Unknown error"}`);
+    }
+    throw new Error("Failed to connect to the server. Please try again later.");
+  }
+};
+
+export const comprehensiveAnalysis = async (
+  file: File
+): Promise<any> => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await api.post("/api/forgery/comprehensive", formData);
+    
+    // Get the response data - should already be properly processed by the backend
+    const result = response.data;
+    
+    // Double-check the consistency of the prediction with the voting results
+    // This ensures frontend sync with backend's authentic-biased logic
+    if (result.voting_summary) {
+      const { tampered_votes, authentic_votes } = result.voting_summary;
+      
+      // If votes are equal or authentic votes are more, ensure prediction is authentic
+      if (tampered_votes <= authentic_votes && result.prediction !== "authentic") {
+        console.warn("Fixing inconsistent prediction from backend: defaulting to authentic on tied vote");
+        result.prediction = "authentic";
+        
+        // Recalculate average confidence for authentic predictions
+        let authenticConfidence = 0;
+        let authenticCount = 0;
+        
+        if (result.results) {
+          Object.values(result.results).forEach((analysis: any) => {
+            if (analysis.prediction === "authentic") {
+              authenticConfidence += analysis.confidence;
+              authenticCount++;
+            }
+          });
+          
+          if (authenticCount > 0) {
+            result.overall_confidence = authenticConfidence / authenticCount;
+          }
+        }
+        
+        // Reset forgery type when authentic
+        result.most_likely_forgery_type = null;
+      }
+    }
+    
+    return result;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(`Comprehensive analysis failed: ${error.response.data.error || "Unknown error"}`);
+    }
+    throw new Error("Failed to connect to the server. Please try again later.");
   }
 };
 

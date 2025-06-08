@@ -562,49 +562,89 @@ async def comprehensive_forgery_detection(
         _, inpainting_confidence = detect_inpainting_combined(img)
         metadata_results, metadata_confidence = check_metadata_tampering(img)
         
-        # Determine if image is tampered based on highest confidence
-        confidences = [
-            copy_move_confidence,
-            splicing_confidence,
-            inpainting_confidence,
-            metadata_confidence
+        # Create a collection of all detection results with their confidences and predictions
+        detection_results = [
+            {"method": "copy-move", "confidence": float(copy_move_confidence), "prediction": "tampered" if copy_move_confidence > 0.5 else "authentic"},
+            {"method": "splicing", "confidence": float(splicing_confidence), "prediction": "tampered" if splicing_confidence > 0.5 else "authentic"},
+            {"method": "inpainting", "confidence": float(inpainting_confidence), "prediction": "tampered" if inpainting_confidence > 0.5 else "authentic"},
+            {"method": "metadata", "confidence": float(metadata_confidence), "prediction": "tampered" if metadata_confidence > 0.5 else "authentic"}
         ]
         
-        # Add new method confidences
+        # Add additional method results
         if noise_prediction:
-            confidences.append(noise_prediction["confidence"] if noise_prediction["prediction"] == "tampered" else 0)
+            detection_results.append({"method": "noise-pattern", "confidence": float(noise_prediction["confidence"]), "prediction": noise_prediction["prediction"]})
         
         if freq_prediction:
-            confidences.append(freq_prediction["confidence"] if freq_prediction["prediction"] == "tampered" else 0)
+            detection_results.append({"method": "frequency-artifact", "confidence": float(freq_prediction["confidence"]), "prediction": freq_prediction["prediction"]})
         
-        # If we have CNN prediction, add it to confidences
         if cnn_prediction:
-            confidences.append(cnn_prediction["confidence"] if cnn_prediction["prediction"] == "tampered" else 0)
+            # The CNN model is highly reliable, so we give it slightly more weight
+            # by ensuring its vote is always counted if confidence is high
+            detection_results.append({"method": "cnn-direct", "confidence": float(cnn_prediction["confidence"]), "prediction": cnn_prediction["prediction"]})
         
-        max_confidence = max(confidences)
-        is_tampered = max_confidence > 0.5
+        # Count votes for tampered vs authentic, only counting methods with confidence >= 0.5
+        tampered_votes = 0
+        authentic_votes = 0
         
-        # Get most likely forgery type
-        forgery_types = ["copy-move", "splicing", "inpainting", "metadata"]
+        # Process each detection result and count votes properly
+        for result in detection_results:
+            # Only count as a vote if confidence is significant (>= 0.5)
+            if result["confidence"] >= 0.5:
+                if result["prediction"] == "tampered":
+                    tampered_votes += 1
+                elif result["prediction"] == "authentic":
+                    authentic_votes += 1
+                    # Give special weight to CNN prediction if confidence is very high (>0.95)
+                    if result["method"] == "cnn-direct" and result["confidence"] > 0.95:
+                        # Add an extra vote for highly confident CNN predictions
+                        authentic_votes += 1
+                        logger.debug(f"Adding extra vote for highly confident CNN prediction: {result['confidence']}")
         
-        # Add new method types
-        if noise_prediction:
-            forgery_types.append("noise-pattern")
+        # Log the vote counts for debugging
+        logger.debug(f"Vote counts: Tampered={tampered_votes}, Authentic={authentic_votes}")
+        logger.debug(f"Detection results: {detection_results}")
         
-        if freq_prediction:
-            forgery_types.append("frequency-artifact")
+        # Find the method with highest confidence
+        highest_confidence_method = max(detection_results, key=lambda x: x["confidence"])
         
-        # Add CNN as a forgery type if available
-        if cnn_prediction:
-            forgery_types.append("cnn-direct")
+        # Determine the overall prediction based on majority vote
+        overall_prediction = None
+        overall_confidence = 0.0
+        most_likely_type = None
         
-        most_likely_type = forgery_types[confidences.index(max_confidence)]
+        if tampered_votes > authentic_votes:
+            overall_prediction = "tampered"
+            # Calculate average confidence for tampered predictions with confidence >= 0.5
+            tampered_confidences = [result["confidence"] for result in detection_results 
+                                 if result["prediction"] == "tampered" and result["confidence"] >= 0.5]
+            overall_confidence = sum(tampered_confidences) / len(tampered_confidences) if tampered_confidences else 0.5
+            
+            # Find the method with highest confidence among tampered predictions
+            tampered_methods = [result for result in detection_results 
+                             if result["prediction"] == "tampered" and result["confidence"] >= 0.5]
+            if tampered_methods:
+                most_likely_method = max(tampered_methods, key=lambda x: x["confidence"])
+                most_likely_type = most_likely_method["method"]
+        
+        else:  # If authentic votes >= tampered votes, consider it authentic (this includes ties)
+            overall_prediction = "authentic"
+            # Calculate average confidence for authentic predictions with confidence >= 0.5
+            authentic_confidences = [result["confidence"] for result in detection_results 
+                                  if result["prediction"] == "authentic" and result["confidence"] >= 0.5]
+            
+            # If there are no authentic predictions with confidence >= 0.5, use all authentic predictions
+            if not authentic_confidences:
+                authentic_confidences = [result["confidence"] for result in detection_results 
+                                      if result["prediction"] == "authentic"]
+            
+            overall_confidence = sum(authentic_confidences) / len(authentic_confidences) if authentic_confidences else 0.5
+            most_likely_type = None  # No forgery type when authentic
         
         # Initialize results dictionary
         results = {
-            "prediction": "tampered" if is_tampered else "authentic",
-            "overall_confidence": float(max_confidence),
-            "most_likely_forgery_type": most_likely_type if is_tampered else None,
+            "prediction": overall_prediction,
+            "overall_confidence": float(overall_confidence),
+            "most_likely_forgery_type": most_likely_type if overall_prediction == "tampered" else None,
             "filename": file.filename,
             "original_size": {"width": img.width, "height": img.height},
             "ela_image_url": ela_data_uri,  # Include ELA image URL in the response
@@ -628,6 +668,16 @@ async def comprehensive_forgery_detection(
                     "analysis": metadata_results
                 }
             }
+        }
+        
+        # Add voting summary
+        results["voting_summary"] = {
+            "tampered_votes": tampered_votes,
+            "authentic_votes": authentic_votes,
+            "total_methods": len(detection_results),
+            "majority": "tampered" if tampered_votes > authentic_votes else 
+                       "authentic" if authentic_votes > tampered_votes else "tie_as_authentic",
+            "tie_breaker_rule": "When votes are tied, the image is considered authentic for safety"
         }
         
         # Add CNN direct prediction if available

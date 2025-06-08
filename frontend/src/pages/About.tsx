@@ -252,7 +252,7 @@ const About: React.FC = () => {
               </h2>
 
               <div className="prose prose-invert max-w-none">
-                <p>
+                <p className="text-gray-300">
                   This project implements a Convolutional Neural Network (CNN)
                   based approach for detecting image forgeries, particularly
                   focusing on identifying manipulated regions within digital
@@ -261,8 +261,8 @@ const About: React.FC = () => {
                   and metadata tampering.
                 </p>
 
-                <h3>Technical Overview</h3>
-                <p>
+                <h3 className="text-xl font-semibold text-blue-300 mt-6 mb-3">Technical Overview</h3>
+                <p className="text-gray-300">
                   The core of this system is based on a deep learning
                   architecture that analyzes patterns and inconsistencies within
                   images that may not be visible to the human eye. The CNN model
@@ -270,8 +270,8 @@ const About: React.FC = () => {
                   to learn the subtle artifacts introduced during manipulation.
                 </p>
 
-                <h3>Key Features</h3>
-                <ul>
+                <h3 className="text-xl font-semibold text-blue-300 mt-6 mb-3">Key Features</h3>
+                <ul className="list-disc list-inside text-gray-300 space-y-1">
                   <li>
                     Multiple forgery detection techniques
                   </li>
@@ -285,29 +285,29 @@ const About: React.FC = () => {
                   <li>Detailed result visualization with confidence scoring</li>
                 </ul>
 
-                <h3>Methodology</h3>
-                <p>The detection process involves several specialized techniques:</p>
-                <ol>
+                <h3 className="text-xl font-semibold text-blue-300 mt-6 mb-3">Methodology</h3>
+                <p className="text-gray-300">The detection process involves several specialized techniques:</p>
+                <ol className="list-decimal list-inside text-gray-300 space-y-1 mt-2">
                   <li>
-                    <strong>Copy-Move Detection:</strong> Identifies duplicated regions within the same image using ORB keypoints or DCT coefficients.
+                    <strong className="text-white">Copy-Move Detection:</strong> Identifies duplicated regions within the same image using ORB keypoints or DCT coefficients.
                   </li>
                   <li>
-                    <strong>Splicing Detection:</strong> Locates inconsistencies in edges and lighting that occur when content from one image is inserted into another.
+                    <strong className="text-white">Splicing Detection:</strong> Locates inconsistencies in edges and lighting that occur when content from one image is inserted into another.
                   </li>
                   <li>
-                    <strong>Inpainting Detection:</strong> Finds areas that have been filled in using AI or content-aware fill tools.
+                    <strong className="text-white">Inpainting Detection:</strong> Finds areas that have been filled in using AI or content-aware fill tools.
                   </li>
                   <li>
-                    <strong>Double JPEG Detection:</strong> Detects artifacts from multiple JPEG compressions that indicate editing and resaving.
+                    <strong className="text-white">Double JPEG Detection:</strong> Detects artifacts from multiple JPEG compressions that indicate editing and resaving.
                   </li>
                   <li>
-                    <strong>Metadata Analysis:</strong> Examines EXIF data for inconsistencies that suggest tampering.
+                    <strong className="text-white">Metadata Analysis:</strong> Examines EXIF data for inconsistencies that suggest tampering.
                   </li>
                 </ol>
 
-                <h3>Technologies Used</h3>
-                <p>This project is built using several modern technologies:</p>
-                <ul>
+                <h3 className="text-xl font-semibold text-blue-300 mt-6 mb-3">Technologies Used</h3>
+                <p className="text-gray-300">This project is built using several modern technologies:</p>
+                <ul className="list-disc list-inside text-gray-300 space-y-1 mt-2">
                   <li>Python with PyTorch for the CNN model development</li>
                   <li>FastAPI for the backend API</li>
                   <li>React and Tailwind CSS for the frontend interface</li>
@@ -324,7 +324,7 @@ const About: React.FC = () => {
               </h2>
 
               <div className="prose prose-invert max-w-none">
-                <p>
+                <p className="text-gray-300">
                   Image forgery detection is an increasingly important field in
                   digital forensics as image manipulation becomes more
                   sophisticated and accessible. Traditional methods often rely
@@ -333,39 +333,39 @@ const About: React.FC = () => {
                   years.
                 </p>
 
-                <p>
+                <p className="text-gray-300 mt-4">
                   This project builds upon several influential research papers:
                 </p>
 
-                <ul>
+                <ul className="mt-4 space-y-4">
                   <li>
-                    <strong>CNN-based Image Forgery Detection (2018)</strong>
-                    <p className="mt-1">
+                    <strong className="text-white">CNN-based Image Forgery Detection (2018)</strong>
+                    <p className="mt-1 text-gray-300">
                       Pioneering work on using CNN architectures for detecting
                       manipulation artifacts in images.
                     </p>
                   </li>
                   <li>
-                    <strong>
+                    <strong className="text-white">
                       ManTra-Net: Manipulation Tracing Network (2019)
                     </strong>
-                    <p className="mt-1">
+                    <p className="mt-1 text-gray-300">
                       End-to-end solution for both detecting and localizing
                       image forgeries regardless of manipulation type.
                     </p>
                   </li>
                   <li>
-                    <strong>
+                    <strong className="text-white">
                       SPAN: Spatial Pyramid Attention Network (2020)
                     </strong>
-                    <p className="mt-1">
+                    <p className="mt-1 text-gray-300">
                       Advanced architecture incorporating attention mechanisms
                       to focus on relevant image regions.
                     </p>
                   </li>
                 </ul>
 
-                <p>
+                <p className="text-gray-300 mt-4">
                   Our implementation incorporates specialized detection techniques for different types of forgeries, providing a comprehensive analysis system that can detect various manipulation methods.
                 </p>
               </div>
@@ -379,7 +379,7 @@ const About: React.FC = () => {
               </h2>
 
               <div className="prose prose-invert max-w-none mb-6">
-                <p>
+                <p className="text-gray-300">
                   This project was developed as a final year project. Feel free
                   to reach out for questions, contributions, or collaboration
                   opportunities.

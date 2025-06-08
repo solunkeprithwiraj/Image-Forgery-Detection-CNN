@@ -6,20 +6,10 @@ import {
   FaImage,
   FaTimes,
   FaLayerGroup,
-  FaSearchLocation,
-  FaChevronDown,
-  FaChevronUp,
-  FaEye,
-  FaPalette,
-  FaMagic,
-  FaRegObjectGroup,
-  FaCrosshairs,
-  FaExchangeAlt,
   FaExclamationTriangle,
-  FaCopy,
-  FaCut as FaScissors,
-  FaEraser,
-  FaFileImage
+  FaCheckCircle,
+  FaRegLightbulb,
+  FaWaveSquare
 } from "react-icons/fa";
 import AnalysisResult from "../components/ui/AnalysisResult";
 import {
@@ -29,28 +19,18 @@ import {
   detectInpainting,
   analyzeMetadata,
   comprehensiveAnalysis,
-  ForgeryType,
-  API_BASE_URL
+  ForgeryType
 } from "../services/api";
 import useImageUpload from "../hooks/useImageUpload";
 import ThreeDModel from "../components/3D_Model/3DModel";
 
 const Detect: React.FC = () => {
+  const API_BASE_URL = "http://localhost:8000";
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedMethod, setSelectedMethod] = useState<ForgeryType>("comprehensive");
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [resultImageUrl, setResultImageUrl] = useState<string | null>(null);
-  
-  // Method-specific options
-  const [copyMoveMethod, setCopyMoveMethod] = useState("orb");
-  const [splicingMethod, setSplicingMethod] = useState("combined");
-  const [inpaintingMethod, setInpaintingMethod] = useState("combined");
-  const [metadataDetailed, setMetadataDetailed] = useState(false);
-  
-  // ELA options
-  const [elaQuality, setElaQuality] = useState(85);
   
   // Show 3D model
   const [showModel, setShowModel] = useState(false);
@@ -83,60 +63,24 @@ const Detect: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      let analysisResult: any = null;
-      let imageUrl = null;
-      let elaImageUrl = null;
-
-      switch (selectedMethod) {
-        case "copy-move":
-          const copyMoveResult = await detectCopyMove(file, copyMoveMethod);
-          analysisResult = copyMoveResult.result;
-          imageUrl = copyMoveResult.imageUrl;
-          elaImageUrl = analysisResult.ela_image_url;
-          break;
-        
-        case "splicing":
-          const splicingResult = await detectSplicing(file, splicingMethod);
-          analysisResult = splicingResult.result;
-          imageUrl = splicingResult.imageUrl;
-          elaImageUrl = analysisResult.ela_image_url;
-          break;
-        
-        case "inpainting":
-          const inpaintingResult = await detectInpainting(file, inpaintingMethod);
-          analysisResult = inpaintingResult.result;
-          imageUrl = inpaintingResult.imageUrl;
-          elaImageUrl = analysisResult.ela_image_url;
-          break;
-        
-        case "metadata":
-          analysisResult = await analyzeMetadata(file, metadataDetailed);
-          break;
-        
-        case "comprehensive":
-        default:
-          const compResult = await comprehensiveAnalysis(file);
-          analysisResult = compResult;
-          elaImageUrl = compResult.ela_image_url;
-          break;
-      }
-
+      // Always use comprehensive analysis
+      const compResult = await comprehensiveAnalysis(file);
+      
       // Format the result to include all necessary fields
       const formattedResult = {
         filename: file.name,
-        prediction: analysisResult.prediction === "tampered" ? 1 : 0,
-        prediction_label: analysisResult.prediction,
-        confidence: analysisResult.confidence || analysisResult.overall_confidence,
-        method: selectedMethod,
-        ela_image_url: elaImageUrl,
-        processing_time: analysisResult.processing_time || 0
+        prediction: compResult.prediction === "tampered" ? 1 : 0,
+        prediction_label: compResult.prediction,
+        confidence: compResult.overall_confidence || compResult.confidence || 0.5,
+        method: "comprehensive",
+        ela_image_url: compResult.ela_image_url,
+        processing_time: compResult.processing_time || 0,
+        results: compResult.results || {},
+        most_likely_forgery_type: compResult.most_likely_forgery_type
       };
 
       setResult(formattedResult);
-      if (imageUrl) {
-        setResultImageUrl(imageUrl);
-      }
-
+      
       console.log("Analysis result:", formattedResult);
     } catch (err: any) {
       console.error("Analysis error:", err);
@@ -151,17 +95,6 @@ const Detect: React.FC = () => {
     setResult(null);
     setError(null);
     setResultImageUrl(null);
-  };
-
-  const renderMethodIcon = (method: ForgeryType) => {
-    switch (method) {
-      case "copy-move": return <FaCopy />;
-      case "splicing": return <FaScissors />;
-      case "inpainting": return <FaEraser />;
-      case "metadata": return <FaFileImage />;
-      case "comprehensive": return <FaLayerGroup />;
-      default: return <FaEye />;
-    }
   };
 
   return (
@@ -266,123 +199,6 @@ const Detect: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Analysis Options */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    {/* Analysis Type Selection */}
-                    <div className="md:col-span-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors duration-300">
-                      <h3 className="text-gray-200 font-medium mb-3 flex items-center">
-                        <FaLayerGroup className="mr-2 text-blue-400" /> Detection Method
-                      </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-                        {[
-                          { id: "comprehensive", label: "All Methods" },
-                          { id: "copy-move", label: "Copy-Move" },
-                          { id: "splicing", label: "Splicing" },
-                          { id: "inpainting", label: "Inpainting" },
-                          { id: "metadata", label: "Metadata" },
-                        ].map((method) => (
-                          <button
-                            key={method.id}
-                            onClick={() => setSelectedMethod(method.id as ForgeryType)}
-                            className={`p-2 rounded-lg text-center text-sm flex flex-col items-center justify-center transition-all duration-300 ${
-                              selectedMethod === method.id
-                                ? "bg-blue-600 text-white"
-                                : "bg-white/5 text-gray-300 hover:bg-white/10"
-                            }`}
-                          >
-                            <span className="text-xl mb-1">
-                              {renderMethodIcon(method.id as ForgeryType)}
-                            </span>
-                            <span>{method.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Advanced Options Button */}
-                    <div className="md:col-span-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors duration-300">
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-gray-200 font-medium flex items-center">
-                          <FaSearchLocation className="mr-2 text-blue-400" /> Advanced Analysis Options
-                        </h3>
-                        <button
-                          onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-                          className="text-blue-400 hover:text-blue-300 transition-colors"
-                        >
-                          {showAdvancedOptions ? <FaChevronUp /> : <FaChevronDown />}
-                        </button>
-                      </div>
-
-                      {showAdvancedOptions && (
-                        <div className="mt-4 space-y-4">
-                          {selectedMethod === "copy-move" && (
-                            <div>
-                              <label className="block text-gray-400 text-sm mb-1">
-                                Algorithm
-                              </label>
-                              <select
-                                value={copyMoveMethod}
-                                onChange={(e) => setCopyMoveMethod(e.target.value)}
-                                className="w-full bg-black/30 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              >
-                                <option value="orb">ORB Keypoints</option>
-                                <option value="dct">DCT Blocks</option>
-                              </select>
-                            </div>
-                          )}
-
-                          {selectedMethod === "splicing" && (
-                            <div>
-                              <label className="block text-gray-400 text-sm mb-1">
-                                Algorithm
-                              </label>
-                              <select
-                                value={splicingMethod}
-                                onChange={(e) => setSplicingMethod(e.target.value)}
-                                className="w-full bg-black/30 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              >
-                                <option value="edge">Edge Inconsistency</option>
-                                <option value="lighting">Lighting Analysis</option>
-                                <option value="combined">Combined</option>
-                              </select>
-                            </div>
-                          )}
-
-                          {selectedMethod === "inpainting" && (
-                            <div>
-                              <label className="block text-gray-400 text-sm mb-1">
-                                Algorithm
-                              </label>
-                              <select
-                                value={inpaintingMethod}
-                                onChange={(e) => setInpaintingMethod(e.target.value)}
-                                className="w-full bg-black/30 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              >
-                                <option value="texture">Texture Analysis</option>
-                                <option value="noise">Noise Analysis</option>
-                                <option value="combined">Combined</option>
-                              </select>
-                            </div>
-                          )}
-
-                          {selectedMethod === "metadata" && (
-                            <div>
-                              <label className="inline-flex items-center text-gray-300 hover:text-white cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  className="form-checkbox rounded text-blue-500 focus:ring-blue-500 focus:ring-opacity-50"
-                                  checked={metadataDetailed}
-                                  onChange={(e) => setMetadataDetailed(e.target.checked)}
-                                />
-                                <span className="ml-2">Detailed Analysis</span>
-                              </label>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
                   {/* Analysis Button */}
                   <div className="flex flex-col sm:flex-row gap-4">
                     <motion.button
@@ -422,10 +238,8 @@ const Detect: React.FC = () => {
                         </>
                       ) : (
                         <>
-                          {renderMethodIcon(selectedMethod)}
-                          <span className="ml-2">
-                            Analyze with {selectedMethod === "comprehensive" ? "All Methods" : selectedMethod}
-                          </span>
+                          <FaLayerGroup className="mr-2" />
+                          <span>Analyze Image</span>
                         </>
                       )}
                     </motion.button>
@@ -442,15 +256,201 @@ const Detect: React.FC = () => {
                 </>
               ) : (
                 <>
-                  {/* Results Display */}
-                  <AnalysisResult 
-                    result={result}
-                    apiBaseUrl={API_BASE_URL}
-                    originalImage={preview || undefined}
-                    onReset={handleReset}
-                    showLocalization={true}
-                    showEla={true}
-                  />
+                  {/* Results Display with Tab Cards */}
+                  <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
+                    {/* Result Header */}
+                    <div className="flex items-center mb-6">
+                      {result.prediction === 1 || result.prediction_label === "tampered" ? (
+                        <div className="flex items-center text-red-500">
+                          <FaExclamationTriangle className="text-3xl mr-3" />
+                          <h2 className="text-2xl font-bold text-white">Manipulation Detected</h2>
+                        </div>
+                      ) : (
+                        <div className="flex items-center text-green-500">
+                          <FaCheckCircle className="text-3xl mr-3" />
+                          <h2 className="text-2xl font-bold text-white">Image Appears Authentic</h2>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Confidence Bar */}
+                    <div className="mb-6">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-300">
+                          Confidence
+                        </span>
+                        <span className="text-sm font-medium text-gray-300">
+                          {Math.round(result.confidence * 100)}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-700/50 backdrop-blur-sm rounded-full h-2.5 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.round(result.confidence * 100)}%` }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          className={`h-2.5 rounded-full ${
+                            result.prediction === 1 || result.prediction_label === "tampered"
+                              ? "bg-gradient-to-r from-red-500 to-orange-500"
+                              : "bg-gradient-to-r from-green-400 to-emerald-500"
+                          }`}
+                        ></motion.div>
+                      </div>
+                    </div>
+                    
+                    {/* Tab Cards for Different Analysis Types */}
+                    <div className="space-y-4">
+                      {/* Tabs Header - Card Style Navigation */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <button 
+                          className="cursor-pointer bg-white/10 hover:bg-white/20 data-[state=active]:bg-blue-600 flex items-center gap-1 text-xs sm:gap-2 sm:text-sm px-4 py-2 rounded-lg text-white"
+                          data-state="active"
+                        >
+                          <FaRegLightbulb className="h-3 w-3 sm:h-4 sm:w-4" /> 
+                          ELA Analysis
+                        </button>
+                        
+                        {result.results?.noise_analysis && (
+                          <button 
+                            className="cursor-pointer bg-white/10 hover:bg-white/20 flex items-center gap-1 text-xs sm:gap-2 sm:text-sm px-4 py-2 rounded-lg text-white"
+                          >
+                            <FaWaveSquare className="h-3 w-3 sm:h-4 sm:w-4" /> 
+                            Noise Analysis
+                          </button>
+                        )}
+                        
+                        {result.results?.frequency_analysis && (
+                          <button 
+                            className="cursor-pointer bg-white/10 hover:bg-white/20 flex items-center gap-1 text-xs sm:gap-2 sm:text-sm px-4 py-2 rounded-lg text-white"
+                          >
+                            <FaWaveSquare className="h-3 w-3 sm:h-4 sm:w-4" /> 
+                            Frequency Analysis
+                          </button>
+                        )}
+                      </div>
+                      
+                      {/* Content Area for Tab Cards */}
+                      <div className="bg-black/20 backdrop-blur-md rounded-xl p-4">
+                        {/* ELA Tab Content - Default Active */}
+                        <div className="flex flex-col md:flex-row gap-4">
+                          <div className="w-full md:w-1/2">
+                            <h3 className="text-lg font-medium text-white mb-2">Original Image</h3>
+                            <div className="bg-black/30 rounded-lg overflow-hidden aspect-square">
+                              <img 
+                                src={preview || ""} 
+                                alt="Original" 
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          </div>
+                          <div className="w-full md:w-1/2">
+                            <h3 className="text-lg font-medium text-white mb-2">Error Level Analysis</h3>
+                            <div className="bg-black/30 rounded-lg overflow-hidden aspect-square">
+                              <img 
+                                src={result.ela_image_url || ""} 
+                                alt="ELA" 
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-4 p-3 bg-blue-900/20 backdrop-blur-sm rounded-lg text-blue-300">
+                          <p className="text-sm">
+                            <strong>Error Level Analysis (ELA):</strong> This technique identifies areas in the image that have different compression levels, which may indicate manipulation. Brighter areas in the ELA image often reveal edited regions.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Analysis Summary */}
+                      {result.results && Object.keys(result.results).length > 0 && (
+                        <div className="mt-4 bg-black/20 backdrop-blur-md rounded-xl p-4">
+                          <h3 className="text-lg font-medium text-white mb-3">Analysis Summary</h3>
+                          
+                          {/* Display voting summary if available */}
+                          {result.voting_summary && (
+                            <div className="mb-4 p-3 bg-blue-900/30 backdrop-blur-sm rounded-lg">
+                              <h4 className="text-white font-medium mb-2">Voting Results</h4>
+                              <div className="grid grid-cols-2 gap-2 mb-2">
+                                <div className="bg-green-900/20 rounded p-2 flex items-center justify-between">
+                                  <span className="text-green-300">Authentic Votes:</span>
+                                  <span className="font-bold text-green-300">{result.voting_summary.authentic_votes}</span>
+                                </div>
+                                <div className="bg-red-900/20 rounded p-2 flex items-center justify-between">
+                                  <span className="text-red-300">Tampered Votes:</span>
+                                  <span className="font-bold text-red-300">{result.voting_summary.tampered_votes}</span>
+                                </div>
+                              </div>
+                              <div className="text-xs text-gray-300 italic">
+                                {result.voting_summary.majority === "tie_as_authentic" ? 
+                                  "The votes were tied, so the image is considered authentic by default." :
+                                  `Majority prediction: ${result.voting_summary.majority}`
+                                }
+                                {result.results?.cnn_direct?.confidence > 0.95 && 
+                                  result.results.cnn_direct.prediction === "authentic" && 
+                                  " (CNN prediction given extra weight due to high confidence)"}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            {Object.entries(result.results).map(([method, data]: [string, any]) => (
+                              <div 
+                                key={method}
+                                className={`p-3 rounded-lg border ${
+                                  data.prediction === "tampered" 
+                                    ? "border-red-500/50 bg-red-900/20" 
+                                    : "border-green-500/50 bg-green-900/20"
+                                }`}
+                              >
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="font-medium text-white capitalize">
+                                    {method.replace("_", " ")}
+                                  </span>
+                                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                    data.prediction === "tampered"
+                                      ? "bg-red-500/30 text-red-300"
+                                      : "bg-green-500/30 text-green-300"
+                                  }`}>
+                                    {data.prediction}
+                                  </span>
+                                </div>
+                                <div className="w-full bg-black/30 h-1.5 rounded-full overflow-hidden">
+                                  <div 
+                                    className={`h-1.5 rounded-full ${
+                                      data.prediction === "tampered"
+                                        ? "bg-red-500"
+                                        : "bg-green-500"
+                                    }`}
+                                    style={{ width: `${Math.round(data.confidence * 100)}%` }}
+                                  ></div>
+                                </div>
+                                <div className="mt-1 text-right text-xs text-gray-400">
+                                  {Math.round(data.confidence * 100)}% confidence
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          {result.most_likely_forgery_type && (
+                            <div className="mt-4 p-3 bg-red-900/20 backdrop-blur-sm rounded-lg text-red-300">
+                              <p className="text-sm">
+                                <strong>Most Likely Forgery Type:</strong> {result.most_likely_forgery_type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex justify-between mt-6">
+                      <button
+                        onClick={handleReset}
+                        className="px-4 py-2 bg-gray-700/50 hover:bg-gray-700/70 text-white rounded-lg transition-colors"
+                      >
+                        Analyze Another Image
+                      </button>
+                    </div>
+                  </div>
                 </>
               )}
             </div>

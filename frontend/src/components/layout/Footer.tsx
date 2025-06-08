@@ -9,13 +9,13 @@ const Footer: React.FC = () => {
   const linkedinUrl = import.meta.env.VITE_APP_AUTHOR_LINKEDIN || "#";
 
   return (
-    <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
+    <footer className="bg-white/10 backdrop-blur-xl border-t border-white/20 mt-auto">
       <div className="container mx-auto px-4 sm:px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and description */}
           <div className="md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
                 <svg
                   viewBox="0 0 24 24"
                   className="w-5 h-5 text-white"
@@ -37,11 +37,11 @@ const Footer: React.FC = () => {
                   />
                 </svg>
               </div>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">
+              <span className="text-lg font-bold text-white">
                 ForgeDetect
               </span>
             </div>
-            <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-xs">
+            <p className="text-gray-300 mb-4 max-w-xs">
               Advanced image forgery detection using CNN models to identify and
               localize tampered regions in images.
             </p>
@@ -50,13 +50,13 @@ const Footer: React.FC = () => {
                 href="https://github.com/solunkeprithwiraj/image-forgery-detection-cnn"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition duration-200"
+                className="text-gray-400 hover:text-white transition duration-200"
                 aria-label="GitHub"
               >
                 <FaGithub className="w-5 h-5" />
               </a>
               <span
-                className="text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                className="text-gray-600 cursor-not-allowed"
                 aria-label="Twitter (disabled)"
                 title="Twitter link disabled"
               >
@@ -66,7 +66,7 @@ const Footer: React.FC = () => {
                 href={linkedinUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition duration-200"
+                className="text-gray-400 hover:text-white transition duration-200"
                 aria-label="LinkedIn"
               >
                 <FaLinkedin className="w-5 h-5" />
@@ -76,14 +76,14 @@ const Footer: React.FC = () => {
 
           {/* Navigation */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
               Navigation
             </h3>
             <ul className="space-y-3">
               <li>
                 <Link
                   to="/"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition duration-200"
+                  className="text-gray-400 hover:text-blue-400 transition duration-200"
                 >
                   Home
                 </Link>
@@ -91,7 +91,7 @@ const Footer: React.FC = () => {
               <li>
                 <Link
                   to="/detect"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition duration-200"
+                  className="text-gray-400 hover:text-blue-400 transition duration-200"
                 >
                   Detect Forgery
                 </Link>
@@ -99,7 +99,7 @@ const Footer: React.FC = () => {
               <li>
                 <Link
                   to="/about"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition duration-200"
+                  className="text-gray-400 hover:text-blue-400 transition duration-200"
                 >
                   About
                 </Link>
@@ -109,7 +109,7 @@ const Footer: React.FC = () => {
 
           {/* Resources */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
               Resources
             </h3>
             <ul className="space-y-3">
@@ -118,7 +118,7 @@ const Footer: React.FC = () => {
                   href="https://github.com/solunkeprithwiraj/image-forgery-detection-cnn/blob/main/README.md"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition duration-200"
+                  className="text-gray-400 hover:text-blue-400 transition duration-200"
                 >
                   Documentation
                 </a>
@@ -128,7 +128,7 @@ const Footer: React.FC = () => {
                   href="https://github.com/solunkeprithwiraj/image-forgery-detection-cnn/issues"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition duration-200"
+                  className="text-gray-400 hover:text-blue-400 transition duration-200"
                 >
                   Report Issues
                 </a>
@@ -136,7 +136,7 @@ const Footer: React.FC = () => {
               <li>
                 <a
                   href="mailto:solunkeprithwiraj@gmail.com"
-                  className="text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition duration-200"
+                  className="text-gray-400 hover:text-blue-400 transition duration-200"
                 >
                   Contact Us
                 </a>
@@ -145,8 +145,8 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="border-t border-gray-200 dark:border-gray-700 mt-8 pt-8 text-center">
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
+        <div className="border-t border-white/20 mt-8 pt-8 text-center">
+          <p className="text-gray-400 text-sm">
             © {currentYear} ForgeDetect. All rights reserved.
           </p>
         </div>
