@@ -24,6 +24,9 @@ import {
 import useImageUpload from "../hooks/useImageUpload";
 import ThreeDModel from "../components/3D_Model/3DModel";
 
+// Define the tab types
+type AnalysisTab = "ela" | "noise" | "frequency";
+
 const Detect: React.FC = () => {
   const API_BASE_URL = "http://localhost:8000";
 
@@ -34,6 +37,9 @@ const Detect: React.FC = () => {
   
   // Show 3D model
   const [showModel, setShowModel] = useState(false);
+  
+  // Track the active analysis tab
+  const [activeTab, setActiveTab] = useState<AnalysisTab>("ela");
 
   const {
     file,
@@ -81,7 +87,22 @@ const Detect: React.FC = () => {
 
       setResult(formattedResult);
       
+      // Debug log for visualizations
       console.log("Analysis result:", formattedResult);
+      console.log("Noise Analysis URL:", formattedResult.results?.noise_analysis?.visualization_url);
+      console.log("Frequency Analysis URL:", formattedResult.results?.frequency_analysis?.visualization_url);
+      
+      // Default to ela tab initially
+      setActiveTab("ela");
+      
+      // If ELA is not available, try other tabs
+      if (!formattedResult.ela_image_url) {
+        if (formattedResult.results?.noise_analysis?.visualization_url) {
+          setActiveTab("noise");
+        } else if (formattedResult.results?.frequency_analysis?.visualization_url) {
+          setActiveTab("frequency");
+        }
+      }
     } catch (err: any) {
       console.error("Analysis error:", err);
       setError(`An error occurred during analysis: ${err.message || "Unknown error"}`);
@@ -95,6 +116,207 @@ const Detect: React.FC = () => {
     setResult(null);
     setError(null);
     setResultImageUrl(null);
+    setActiveTab("ela"); // Reset to default tab
+  };
+
+  // Function to safely change tabs with validation
+  const changeTab = (newTab: AnalysisTab) => {
+    console.log(`Attempting to change tab from ${activeTab} to ${newTab}`);
+    
+    // Validate if the tab is available before switching
+    if (newTab === "noise" && !result?.results?.noise_analysis?.visualization_url) {
+      console.log("Noise tab not available - visualization URL missing");
+      return;
+    }
+    
+    if (newTab === "frequency" && !result?.results?.frequency_analysis?.visualization_url) {
+      console.log("Frequency tab not available - visualization URL missing");
+      return;
+    }
+    
+    if (newTab === "ela" && !result?.ela_image_url) {
+      console.log("ELA tab not available - visualization URL missing");
+      return;
+    }
+    
+    console.log(`Tab changed to: ${newTab}`);
+    setActiveTab(newTab);
+  };
+
+  // Function to render the content based on active tab
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "noise":
+        if (!result.results?.noise_analysis?.visualization_url) {
+          // Fallback to ELA if noise analysis is not available
+          console.log("Noise visualization URL missing, falling back to ELA");
+          // Use setTimeout to avoid React state update during render
+          setTimeout(() => changeTab("ela"), 0);
+          return null;
+        }
+        return (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="w-full md:w-1/2">
+                <h3 className="text-lg font-medium text-white mb-2">Original Image</h3>
+                <div className="bg-black/30 rounded-lg overflow-hidden aspect-square">
+                  <img 
+                    src={preview || ""} 
+                    alt="Original" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+              <div className="w-full md:w-1/2">
+                <h3 className="text-lg font-medium text-white mb-2">Noise Analysis</h3>
+                <div className="bg-black/30 rounded-lg overflow-hidden aspect-square">
+                  {result.results.noise_analysis.visualization_url ? (
+                    <img 
+                      src={result.results.noise_analysis.visualization_url} 
+                      alt="Noise Analysis" 
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        console.error("Error loading noise analysis image");
+                        e.currentTarget.src = preview || "";  // Fallback to original image
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-400">
+                      Noise analysis visualization not available
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 p-3 bg-blue-900/20 backdrop-blur-sm rounded-lg text-blue-300">
+              <p className="text-sm">
+                <strong>Noise Analysis:</strong> This technique examines the image's noise patterns to detect inconsistencies that may indicate manipulation. Areas with inconsistent noise patterns often suggest forgery.
+              </p>
+            </div>
+          </motion.div>
+        );
+      
+      case "frequency":
+        if (!result.results?.frequency_analysis?.visualization_url) {
+          // Fallback to ELA if frequency analysis is not available
+          console.log("Frequency visualization URL missing, falling back to ELA");
+          // Use setTimeout to avoid React state update during render
+          setTimeout(() => changeTab("ela"), 0);
+          return null;
+        }
+        return (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="w-full md:w-1/2">
+                <h3 className="text-lg font-medium text-white mb-2">Original Image</h3>
+                <div className="bg-black/30 rounded-lg overflow-hidden aspect-square">
+                  <img 
+                    src={preview || ""} 
+                    alt="Original" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+              <div className="w-full md:w-1/2">
+                <h3 className="text-lg font-medium text-white mb-2">Frequency Analysis</h3>
+                <div className="bg-black/30 rounded-lg overflow-hidden aspect-square">
+                  {result.results.frequency_analysis.visualization_url ? (
+                    <img 
+                      src={result.results.frequency_analysis.visualization_url} 
+                      alt="Frequency Analysis" 
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        console.error("Error loading frequency analysis image");
+                        e.currentTarget.src = preview || "";  // Fallback to original image
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-400">
+                      Frequency analysis visualization not available
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 p-3 bg-blue-900/20 backdrop-blur-sm rounded-lg text-blue-300">
+              <p className="text-sm">
+                <strong>Frequency Analysis:</strong> This method analyzes the image in the frequency domain to detect anomalies that may indicate manipulation. Inconsistencies in the frequency spectrum can reveal tampering that's not visible in the spatial domain.
+              </p>
+            </div>
+          </motion.div>
+        );
+      
+      case "ela":
+      default:
+        if (!result.ela_image_url) {
+          // Check if we should switch to another available tab
+          if (result.results?.noise_analysis?.visualization_url) {
+            console.log("ELA visualization URL missing, switching to noise tab");
+            // Use setTimeout to avoid React state update during render
+            setTimeout(() => changeTab("noise"), 0);
+            return null;
+          }
+          if (result.results?.frequency_analysis?.visualization_url) {
+            console.log("ELA visualization URL missing, switching to frequency tab");
+            // Use setTimeout to avoid React state update during render
+            setTimeout(() => changeTab("frequency"), 0);
+            return null;
+          }
+        }
+        return (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="w-full md:w-1/2">
+                <h3 className="text-lg font-medium text-white mb-2">Original Image</h3>
+                <div className="bg-black/30 rounded-lg overflow-hidden aspect-square">
+                  <img 
+                    src={preview || ""} 
+                    alt="Original" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+              <div className="w-full md:w-1/2">
+                <h3 className="text-lg font-medium text-white mb-2">Error Level Analysis</h3>
+                <div className="bg-black/30 rounded-lg overflow-hidden aspect-square">
+                  {result.ela_image_url ? (
+                    <img 
+                      src={result.ela_image_url} 
+                      alt="ELA" 
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        console.error("Error loading ELA image");
+                        e.currentTarget.src = preview || "";  // Fallback to original image
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-400">
+                      ELA visualization not available
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 p-3 bg-blue-900/20 backdrop-blur-sm rounded-lg text-blue-300">
+              <p className="text-sm">
+                <strong>Error Level Analysis (ELA):</strong> This technique identifies areas in the image that have different compression levels, which may indicate manipulation. Brighter areas in the ELA image often reveal edited regions.
+              </p>
+            </div>
+          </motion.div>
+        );
+    }
   };
 
   return (
@@ -302,25 +524,38 @@ const Detect: React.FC = () => {
                       {/* Tabs Header - Card Style Navigation */}
                       <div className="flex flex-wrap gap-2 mb-4">
                         <button 
-                          className="cursor-pointer bg-white/10 hover:bg-white/20 data-[state=active]:bg-blue-600 flex items-center gap-1 text-xs sm:gap-2 sm:text-sm px-4 py-2 rounded-lg text-white"
-                          data-state="active"
+                          onClick={() => changeTab("ela")}
+                          className={`cursor-pointer flex items-center gap-1 text-xs sm:gap-2 sm:text-sm px-4 py-2 rounded-lg text-white 
+                            ${activeTab === "ela" 
+                              ? "bg-blue-600 shadow-lg shadow-blue-500/30" 
+                              : "bg-white/10 hover:bg-white/20"}`}
+                          disabled={!result.ela_image_url}
+                          title={!result.ela_image_url ? "ELA visualization not available" : ""}
                         >
                           <FaRegLightbulb className="h-3 w-3 sm:h-4 sm:w-4" /> 
                           ELA Analysis
                         </button>
                         
-                        {result.results?.noise_analysis && (
+                        {result.results?.noise_analysis?.visualization_url && (
                           <button 
-                            className="cursor-pointer bg-white/10 hover:bg-white/20 flex items-center gap-1 text-xs sm:gap-2 sm:text-sm px-4 py-2 rounded-lg text-white"
+                            onClick={() => changeTab("noise")}
+                            className={`cursor-pointer flex items-center gap-1 text-xs sm:gap-2 sm:text-sm px-4 py-2 rounded-lg text-white 
+                              ${activeTab === "noise" 
+                                ? "bg-blue-600 shadow-lg shadow-blue-500/30" 
+                                : "bg-white/10 hover:bg-white/20"}`}
                           >
                             <FaWaveSquare className="h-3 w-3 sm:h-4 sm:w-4" /> 
                             Noise Analysis
                           </button>
                         )}
                         
-                        {result.results?.frequency_analysis && (
+                        {result.results?.frequency_analysis?.visualization_url && (
                           <button 
-                            className="cursor-pointer bg-white/10 hover:bg-white/20 flex items-center gap-1 text-xs sm:gap-2 sm:text-sm px-4 py-2 rounded-lg text-white"
+                            onClick={() => changeTab("frequency")}
+                            className={`cursor-pointer flex items-center gap-1 text-xs sm:gap-2 sm:text-sm px-4 py-2 rounded-lg text-white 
+                              ${activeTab === "frequency" 
+                                ? "bg-blue-600 shadow-lg shadow-blue-500/30" 
+                                : "bg-white/10 hover:bg-white/20"}`}
                           >
                             <FaWaveSquare className="h-3 w-3 sm:h-4 sm:w-4" /> 
                             Frequency Analysis
@@ -330,34 +565,8 @@ const Detect: React.FC = () => {
                       
                       {/* Content Area for Tab Cards */}
                       <div className="bg-black/20 backdrop-blur-md rounded-xl p-4">
-                        {/* ELA Tab Content - Default Active */}
-                        <div className="flex flex-col md:flex-row gap-4">
-                          <div className="w-full md:w-1/2">
-                            <h3 className="text-lg font-medium text-white mb-2">Original Image</h3>
-                            <div className="bg-black/30 rounded-lg overflow-hidden aspect-square">
-                              <img 
-                                src={preview || ""} 
-                                alt="Original" 
-                                className="w-full h-full object-contain"
-                              />
-                            </div>
-                          </div>
-                          <div className="w-full md:w-1/2">
-                            <h3 className="text-lg font-medium text-white mb-2">Error Level Analysis</h3>
-                            <div className="bg-black/30 rounded-lg overflow-hidden aspect-square">
-                              <img 
-                                src={result.ela_image_url || ""} 
-                                alt="ELA" 
-                                className="w-full h-full object-contain"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="mt-4 p-3 bg-blue-900/20 backdrop-blur-sm rounded-lg text-blue-300">
-                          <p className="text-sm">
-                            <strong>Error Level Analysis (ELA):</strong> This technique identifies areas in the image that have different compression levels, which may indicate manipulation. Brighter areas in the ELA image often reveal edited regions.
-                          </p>
-                        </div>
+                        {/* Render content based on active tab */}
+                        {renderTabContent()}
                       </div>
                       
                       {/* Analysis Summary */}
