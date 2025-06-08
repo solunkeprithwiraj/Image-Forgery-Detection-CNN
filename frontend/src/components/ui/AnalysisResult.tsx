@@ -114,9 +114,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
 
   // Get the ELA image URL (prefer ela_image_url over ela_path)
   const elaImageUrl = result.ela_image_url || result.ela_path;
-  
-  // Get the heatmap image URL
-  const heatmapImageUrl = result.heatmap_path;
+
   
   // Get noise analysis image URL
   const noiseImageUrl = result.results?.noise_analysis?.visualization_url || null;
@@ -133,24 +131,6 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
         }`
     : null);
 
-  // Function to download image
-  const downloadImage = async (imageUrl: string, filename: string) => {
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error("Error downloading image:", error);
-      alert("Failed to download image");
-    }
-  };
 
   // Animation variants
   const containerVariants = {
@@ -216,20 +196,6 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
     }
   };
   
-  // Cycle through available analysis types
-  const cycleAnalysisType = () => {
-    const analysisTypes: ('ela' | 'noise' | 'frequency')[] = [];
-    
-    if (elaImageUrl) analysisTypes.push('ela');
-    if (noiseImageUrl) analysisTypes.push('noise');
-    if (frequencyImageUrl) analysisTypes.push('frequency');
-    
-    if (analysisTypes.length <= 1) return; // Don't cycle if only one type
-    
-    const currentIndex = analysisTypes.indexOf(activeAnalysis);
-    const nextIndex = (currentIndex + 1) % analysisTypes.length;
-    setActiveAnalysis(analysisTypes[nextIndex]);
-  };
 
   // Auto switch to split view if analysis image is available
   useEffect(() => {
@@ -248,7 +214,6 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({
   }, [elaImageUrl, noiseImageUrl, frequencyImageUrl]);
   
   // Determine if we have comprehensive results
-  const isComprehensive = result.results && Object.keys(result.results).length > 0;
   
   // Determine which prediction to show
   const finalPrediction = typeof result.prediction === 'string' 

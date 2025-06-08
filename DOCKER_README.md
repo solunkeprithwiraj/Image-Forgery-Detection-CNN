@@ -25,7 +25,7 @@ docker-compose up -d
 ```
 
 2. Access the application:
-   - Frontend: `http://localhost` or `http://localhost:80`
+   - Frontend: `http://localhost` or `http://localhost:2496`
    - Backend API: `http://localhost:8000`
 
 3. To stop the application:

@@ -1,16 +1,14 @@
-import React, { useRef, useEffect, useState } from "react";
+import  { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
-import { Play, Pause, RotateCcw, Zap, Eye, Settings, Info } from "lucide-react";
 
 const ThreeDModel = () => {
-  const mountRef = useRef(null);
-  const sceneRef = useRef(null);
-  const rendererRef = useRef(null);
-  const animationIdRef = useRef(null);
+  const mountRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const animationIdRef = useRef<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [showControls, setShowControls] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(1);
-  const [nodeCount, setNodeCount] = useState(20);
+  const nodeCount = 20;
   const [showParticles, setShowParticles] = useState(true);
   const [connectionOpacity, setConnectionOpacity] = useState(0.2);
   const [fps, setFps] = useState(60);
@@ -84,8 +82,8 @@ const ThreeDModel = () => {
     scene.add(glowLight);
 
     // Neural network components
-    const neuralNodes = [];
-    const connections = [];
+    const neuralNodes: THREE.Mesh[] = [];
+    const connections: any[] = [];
 
     // Create enhanced neural nodes
     for (let i = 0; i < nodeCount; i++) {
@@ -203,7 +201,7 @@ const ThreeDModel = () => {
     // Mouse interaction
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-    let hoveredNode = null;
+    let hoveredNode: THREE.Mesh | null = null;
 
     const onMouseMove = (event) => {
       const rect = renderer.domElement.getBoundingClientRect();
@@ -247,7 +245,7 @@ const ThreeDModel = () => {
         node.scale.setScalar(pulseScale);
         
         // Dynamic emissive intensity
-        node.material.emissiveIntensity = 2 + Math.sin(time * 2 + pulsePhase) * 1.5;
+        (node.material as THREE.MeshStandardMaterial).emissiveIntensity = 2 + Math.sin(time * 2 + pulsePhase) * 1.5;
       });
 
       // Enhanced connection animations
@@ -288,16 +286,16 @@ const ThreeDModel = () => {
       if (intersects.length > 0) {
         if (hoveredNode !== intersects[0].object) {
           if (hoveredNode) {
-            hoveredNode.material.emissiveIntensity = 2;
+            (hoveredNode.material as THREE.MeshStandardMaterial).emissiveIntensity = 2;
             hoveredNode.scale.setScalar(1);
           }
-          hoveredNode = intersects[0].object;
+          hoveredNode = intersects[0].object as THREE.Mesh;
         }
         hoveredNode.scale.setScalar(1.5 + Math.sin(time * 10) * 0.2);
-        hoveredNode.material.emissiveIntensity = 6;
+        (hoveredNode.material as THREE.MeshStandardMaterial).emissiveIntensity = 6;
       } else {
         if (hoveredNode) {
-          hoveredNode.material.emissiveIntensity = 2;
+          (hoveredNode.material as THREE.MeshStandardMaterial).emissiveIntensity = 2;
           hoveredNode.scale.setScalar(1);
           hoveredNode = null;
         }
@@ -366,23 +364,7 @@ const ThreeDModel = () => {
     };
   }, [isPlaying, animationSpeed, nodeCount, showParticles, connectionOpacity]);
 
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    if (!isPlaying) {
-      // Resume animation
-      const animate = () => {
-        if (!isPlaying) return;
-        animationIdRef.current = requestAnimationFrame(animate);
-        // Animation logic would go here (simplified for this toggle)
-      };
-      animate();
-    }
-  };
 
-  const resetCamera = () => {
-    // Reset camera position (simplified implementation)
-    setAnimationSpeed(1);
-  };
 
   return (
     <div className="relative w-full h-full bg-gradient-to-br from-gray-900 via-black to-purple-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-800">

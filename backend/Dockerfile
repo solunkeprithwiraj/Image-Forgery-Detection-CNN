@@ -15,6 +15,7 @@ COPY requirements-api.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements-api.txt
 
+
 # Copy the backend code
 COPY . .
 

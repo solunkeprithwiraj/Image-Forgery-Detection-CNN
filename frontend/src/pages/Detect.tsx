@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import {
   FaInfoCircle,
   FaUpload,
-  FaImage,
   FaTimes,
   FaLayerGroup,
   FaExclamationTriangle,
@@ -11,15 +10,8 @@ import {
   FaRegLightbulb,
   FaWaveSquare
 } from "react-icons/fa";
-import AnalysisResult from "../components/ui/AnalysisResult";
 import {
-  analyzeElaImage,
-  detectCopyMove,
-  detectSplicing,
-  detectInpainting,
-  analyzeMetadata,
-  comprehensiveAnalysis,
-  ForgeryType
+  comprehensiveAnalysis
 } from "../services/api";
 import useImageUpload from "../hooks/useImageUpload";
 import ThreeDModel from "../components/3D_Model/3DModel";
@@ -28,15 +20,12 @@ import ThreeDModel from "../components/3D_Model/3DModel";
 type AnalysisTab = "ela" | "noise" | "frequency";
 
 const Detect: React.FC = () => {
-  const API_BASE_URL = "http://localhost:8000";
-
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [resultImageUrl, setResultImageUrl] = useState<string | null>(null);
   
   // Show 3D model
-  const [showModel, setShowModel] = useState(false);
   
   // Track the active analysis tab
   const [activeTab, setActiveTab] = useState<AnalysisTab>("ela");
@@ -48,7 +37,6 @@ const Detect: React.FC = () => {
     getRootProps,
     getInputProps,
     isDragActive,
-    isDragAccept,
     isDragReject,
     error: uploadError,
   } = useImageUpload({

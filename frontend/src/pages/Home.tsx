@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import Spline from "@splinetool/react-spline";
 
 import {
   FaArrowRight,
@@ -17,18 +16,22 @@ import {
 import ThreeDModel from "../components/3D_Model/3DModel";
 
 // Error boundary component for Spline
-class SplineErrorBoundary extends React.Component {
-  constructor(props) {
+type SplineErrorBoundaryProps = {
+  children: React.ReactNode;
+};
+
+class SplineErrorBoundary extends React.Component<SplineErrorBoundaryProps> {
+  constructor(props: SplineErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: any) {
     return { hasError: true };
   }
 
   render() {
-    if (this.state.hasError) {
+    if ((this.state as { hasError: boolean }).hasError) {
       return (
         <div className="w-full h-full bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900"></div>
       );
