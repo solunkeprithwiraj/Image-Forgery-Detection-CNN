@@ -51,7 +51,7 @@ Once the application is running, you can access the API documentation at:
 ## Important Endpoints
 
 - `/forgery/comprehensive` - Comprehensive forgery detection using multiple methods
-- `/forgery/pixel-based` - Pixel-based forgery detection using JPEG blocking artifacts
+- `/forgery/copy-move` - Copy-move forgery detection
 - `/forgery/splicing` - Image splicing detection
 - `/forgery/inpainting` - Inpainting detection
 - `/forgery/double-jpeg` - Double JPEG compression detection
