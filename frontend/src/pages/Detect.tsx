@@ -15,42 +15,42 @@ import {
   FaRegObjectGroup,
   FaCrosshairs,
   FaExchangeAlt,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaCopy,
+  FaCut as FaScissors,
+  FaEraser,
+  FaFileImage
 } from "react-icons/fa";
 import AnalysisResult from "../components/ui/AnalysisResult";
 import {
   analyzeElaImage,
-  analyzeImage,
-  analyzeImageEnsemble,
-  generateForgeryHeatmap,
-  AnalysisResult as ApiAnalysisResult,
-  LocalizationMethod,
-  ELAMode,
-  HeatmapMode
+  detectCopyMove,
+  detectSplicing,
+  detectInpainting,
+  analyzeMetadata,
+  comprehensiveAnalysis,
+  ForgeryType,
+  API_BASE_URL
 } from "../services/api";
 import useImageUpload from "../hooks/useImageUpload";
 import ThreeDModel from "../components/3D_Model/3DModel";
 
 const Detect: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<ApiAnalysisResult | null>(null);
+  const [result, setResult] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showLocalization, setShowLocalization] = useState(true);
-  const [showEla, setShowEla] = useState(true);
-  const [useEnsemble, setUseEnsemble] = useState(true);
-  const [heatmapUrl, setHeatmapUrl] = useState<string | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<ForgeryType>("comprehensive");
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [resultImageUrl, setResultImageUrl] = useState<string | null>(null);
   
-  // Advanced ELA options
-  const [elaMode, setElaMode] = useState<ELAMode>("enhanced");
+  // Method-specific options
+  const [copyMoveMethod, setCopyMoveMethod] = useState("orb");
+  const [splicingMethod, setSplicingMethod] = useState("combined");
+  const [inpaintingMethod, setInpaintingMethod] = useState("combined");
+  const [metadataDetailed, setMetadataDetailed] = useState(false);
+  
+  // ELA options
   const [elaQuality, setElaQuality] = useState(85);
-  const [elaEnhanceContrast, setElaEnhanceContrast] = useState(true);
-  const [elaColorize, setElaColorize] = useState(true);
-  
-  // Advanced heatmap options
-  const [heatmapMode, setHeatmapMode] = useState<HeatmapMode>("basic");
-  const [heatmapThreshold, setHeatmapThreshold] = useState(0.5);
-  const [heatmapColormap, setHeatmapColormap] = useState("jet");
   
   // Show 3D model
   const [showModel, setShowModel] = useState(false);
@@ -73,7 +73,7 @@ const Detect: React.FC = () => {
     },
   });
   
-  const handlePredict = async () => {
+  const handleAnalysis = async () => {
     if (!file) {
       setError("Please select an image first.");
       return;
@@ -83,104 +83,64 @@ const Detect: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      let analysisResult: any = null;
+      let imageUrl = null;
+      let elaImageUrl = null;
 
-      const response = await fetch("http://localhost:8000/api/predict", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Prediction failed");
+      switch (selectedMethod) {
+        case "copy-move":
+          const copyMoveResult = await detectCopyMove(file, copyMoveMethod);
+          analysisResult = copyMoveResult.result;
+          imageUrl = copyMoveResult.imageUrl;
+          elaImageUrl = analysisResult.ela_image_url;
+          break;
+        
+        case "splicing":
+          const splicingResult = await detectSplicing(file, splicingMethod);
+          analysisResult = splicingResult.result;
+          imageUrl = splicingResult.imageUrl;
+          elaImageUrl = analysisResult.ela_image_url;
+          break;
+        
+        case "inpainting":
+          const inpaintingResult = await detectInpainting(file, inpaintingMethod);
+          analysisResult = inpaintingResult.result;
+          imageUrl = inpaintingResult.imageUrl;
+          elaImageUrl = analysisResult.ela_image_url;
+          break;
+        
+        case "metadata":
+          analysisResult = await analyzeMetadata(file, metadataDetailed);
+          break;
+        
+        case "comprehensive":
+        default:
+          const compResult = await comprehensiveAnalysis(file);
+          analysisResult = compResult;
+          elaImageUrl = compResult.ela_image_url;
+          break;
       }
 
-      const data = await response.json();
-
-      setResult({
+      // Format the result to include all necessary fields
+      const formattedResult = {
         filename: file.name,
-        prediction: data.prediction,
-        prediction_label: data.prediction_label,
-        confidence: data.confidence,
-        processing_time: data.processing_time,
-        ela_image_url: null, // Not used in prediction
-      });
-
-      console.log("Prediction result:", data);
-    } catch (err) {
-      console.error("Prediction error:", err);
-      setError("An error occurred during prediction. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  
-  const handleElaAnalysis = async () => {
-    if (!file) {
-      setError("Please select an image first.");
-      return;
-    }
-
-    setError(null);
-    setIsProcessing(true);
-
-    try {
-      const elaImageUrl = await analyzeElaImage(
-        file,
-        elaMode,
-        elaQuality,
-        elaEnhanceContrast,
-        elaColorize
-      );
-
-      setResult({
-        filename: file.name,
-        prediction: 0,
-        prediction_label: `ELA Analysis (${elaMode})`,
-        confidence: 0,
-        processing_time: 0,
+        prediction: analysisResult.prediction === "tampered" ? 1 : 0,
+        prediction_label: analysisResult.prediction,
+        confidence: analysisResult.confidence || analysisResult.overall_confidence,
+        method: selectedMethod,
         ela_image_url: elaImageUrl,
-      });
+        processing_time: analysisResult.processing_time || 0
+      };
 
-      console.log("ELA Image URL:", elaImageUrl);
-    } catch (err) {
-      console.error("ELA analysis failed:", err);
-      setError("An error occurred during ELA analysis. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  
-  const handleHeatmapGeneration = async () => {
-    if (!file) {
-      setError("Please select an image first.");
-      return;
-    }
+      setResult(formattedResult);
+      if (imageUrl) {
+        setResultImageUrl(imageUrl);
+      }
 
-    setError(null);
-    setIsProcessing(true);
-
-    try {
-      const heatmapImageUrl = await generateForgeryHeatmap(
-        file,
-        heatmapMode,
-        heatmapThreshold,
-        heatmapColormap
-      );
-
-      setResult({
-        filename: file.name,
-        prediction: 0,
-        prediction_label: `Heatmap Analysis (${heatmapMode})`,
-        confidence: 0,
-        processing_time: 0,
-        heatmap_path: heatmapImageUrl,
-      });
-
-      console.log("Heatmap Image URL:", heatmapImageUrl);
-    } catch (err) {
-      console.error("Heatmap generation failed:", err);
-      setError("An error occurred during heatmap generation. Please try again.");
+      console.log("Analysis result:", formattedResult);
+    } catch (err: any) {
+      console.error("Analysis error:", err);
+      setError(`An error occurred during analysis: ${err.message || "Unknown error"}`);
     } finally {
       setIsProcessing(false);
     }
@@ -190,7 +150,18 @@ const Detect: React.FC = () => {
     clearImage();
     setResult(null);
     setError(null);
-    setHeatmapUrl(null);
+    setResultImageUrl(null);
+  };
+
+  const renderMethodIcon = (method: ForgeryType) => {
+    switch (method) {
+      case "copy-move": return <FaCopy />;
+      case "splicing": return <FaScissors />;
+      case "inpainting": return <FaEraser />;
+      case "metadata": return <FaFileImage />;
+      case "comprehensive": return <FaLayerGroup />;
+      default: return <FaEye />;
+    }
   };
 
   return (
@@ -298,40 +269,33 @@ const Detect: React.FC = () => {
                   {/* Analysis Options */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                     {/* Analysis Type Selection */}
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors duration-300">
+                    <div className="md:col-span-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors duration-300">
                       <h3 className="text-gray-200 font-medium mb-3 flex items-center">
-                        <FaLayerGroup className="mr-2 text-blue-400" /> Analysis Type
+                        <FaLayerGroup className="mr-2 text-blue-400" /> Detection Method
                       </h3>
-                      <div className="flex flex-col space-y-2">
-                        <label className="inline-flex items-center text-gray-300 hover:text-white cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="form-checkbox rounded text-blue-500 focus:ring-blue-500 focus:ring-opacity-50"
-                            checked={useEnsemble}
-                            onChange={(e) => setUseEnsemble(e.target.checked)}
-                          />
-                          <span className="ml-2">Use Ensemble Model</span>
-                        </label>
-
-                        <label className="inline-flex items-center text-gray-300 hover:text-white cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="form-checkbox rounded text-blue-500 focus:ring-blue-500 focus:ring-opacity-50"
-                            checked={showLocalization}
-                            onChange={(e) => setShowLocalization(e.target.checked)}
-                          />
-                          <span className="ml-2">Show Forgery Heatmap</span>
-                        </label>
-
-                        <label className="inline-flex items-center text-gray-300 hover:text-white cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="form-checkbox rounded text-blue-500 focus:ring-blue-500 focus:ring-opacity-50"
-                            checked={showEla}
-                            onChange={(e) => setShowEla(e.target.checked)}
-                          />
-                          <span className="ml-2">Error Level Analysis</span>
-                        </label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                        {[
+                          { id: "comprehensive", label: "All Methods" },
+                          { id: "copy-move", label: "Copy-Move" },
+                          { id: "splicing", label: "Splicing" },
+                          { id: "inpainting", label: "Inpainting" },
+                          { id: "metadata", label: "Metadata" },
+                        ].map((method) => (
+                          <button
+                            key={method.id}
+                            onClick={() => setSelectedMethod(method.id as ForgeryType)}
+                            className={`p-2 rounded-lg text-center text-sm flex flex-col items-center justify-center transition-all duration-300 ${
+                              selectedMethod === method.id
+                                ? "bg-blue-600 text-white"
+                                : "bg-white/5 text-gray-300 hover:bg-white/10"
+                            }`}
+                          >
+                            <span className="text-xl mb-1">
+                              {renderMethodIcon(method.id as ForgeryType)}
+                            </span>
+                            <span>{method.label}</span>
+                          </button>
+                        ))}
                       </div>
                     </div>
 
@@ -350,127 +314,79 @@ const Detect: React.FC = () => {
                       </div>
 
                       {showAdvancedOptions && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                          {/* ELA Options */}
-                          <div>
-                            <h4 className="text-gray-300 font-medium mb-2 flex items-center">
-                              <FaEye className="mr-2 text-blue-400" /> ELA Options
-                            </h4>
-                            <div className="space-y-3">
-                              <div>
-                                <label className="block text-gray-400 text-sm mb-1">
-                                  Mode
-                                </label>
-                                <select
-                                  value={elaMode}
-                                  onChange={(e) => setElaMode(e.target.value as ELAMode)}
-                                  className="w-full bg-black/30 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                  <option value="basic">Basic</option>
-                                  <option value="enhanced">Enhanced</option>
-                                  <option value="comparison">Comparison</option>
-                                  <option value="zoom">Zoom on Suspicious</option>
-                                </select>
-                              </div>
-                              <div>
-                                <label className="block text-gray-400 text-sm mb-1">
-                                  Quality ({elaQuality})
-                                </label>
-                                <input
-                                  type="range"
-                                  min="50"
-                                  max="95"
-                                  value={elaQuality}
-                                  onChange={(e) => setElaQuality(parseInt(e.target.value))}
-                                  className="w-full accent-blue-500"
-                                />
-                              </div>
-                              <div className="flex justify-between">
-                                <label className="inline-flex items-center text-gray-300 hover:text-white cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    className="form-checkbox rounded text-blue-500 focus:ring-blue-500 focus:ring-opacity-50"
-                                    checked={elaEnhanceContrast}
-                                    onChange={(e) => setElaEnhanceContrast(e.target.checked)}
-                                  />
-                                  <span className="ml-2">Enhance Contrast</span>
-                                </label>
-                                <label className="inline-flex items-center text-gray-300 hover:text-white cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    className="form-checkbox rounded text-blue-500 focus:ring-blue-500 focus:ring-opacity-50"
-                                    checked={elaColorize}
-                                    onChange={(e) => setElaColorize(e.target.checked)}
-                                  />
-                                  <span className="ml-2">Colorize</span>
-                                </label>
-                              </div>
+                        <div className="mt-4 space-y-4">
+                          {selectedMethod === "copy-move" && (
+                            <div>
+                              <label className="block text-gray-400 text-sm mb-1">
+                                Algorithm
+                              </label>
+                              <select
+                                value={copyMoveMethod}
+                                onChange={(e) => setCopyMoveMethod(e.target.value)}
+                                className="w-full bg-black/30 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              >
+                                <option value="orb">ORB Keypoints</option>
+                                <option value="dct">DCT Blocks</option>
+                              </select>
                             </div>
-                          </div>
+                          )}
 
-                          {/* Heatmap Options */}
-                          <div>
-                            <h4 className="text-gray-300 font-medium mb-2 flex items-center">
-                              <FaPalette className="mr-2 text-blue-400" /> Heatmap Options
-                            </h4>
-                            <div className="space-y-3">
-                              <div>
-                                <label className="block text-gray-400 text-sm mb-1">
-                                  Mode
-                                </label>
-                                <select
-                                  value={heatmapMode}
-                                  onChange={(e) => setHeatmapMode(e.target.value as HeatmapMode)}
-                                  className="w-full bg-black/30 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                  <option value="basic">Basic</option>
-                                  <option value="detail">Detail View</option>
-                                  <option value="multi">Multi-Colormap</option>
-                                  <option value="composite">Composite</option>
-                                </select>
-                              </div>
-                              <div>
-                                <label className="block text-gray-400 text-sm mb-1">
-                                  Threshold ({heatmapThreshold.toFixed(2)})
-                                </label>
-                                <input
-                                  type="range"
-                                  min="0.2"
-                                  max="0.8"
-                                  step="0.01"
-                                  value={heatmapThreshold}
-                                  onChange={(e) => setHeatmapThreshold(parseFloat(e.target.value))}
-                                  className="w-full accent-blue-500"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-gray-400 text-sm mb-1">
-                                  Colormap
-                                </label>
-                                <select
-                                  value={heatmapColormap}
-                                  onChange={(e) => setHeatmapColormap(e.target.value)}
-                                  className="w-full bg-black/30 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                  <option value="jet">Jet</option>
-                                  <option value="viridis">Viridis</option>
-                                  <option value="plasma">Plasma</option>
-                                  <option value="inferno">Inferno</option>
-                                  <option value="rainbow">Rainbow</option>
-                                  <option value="hot">Hot</option>
-                                </select>
-                              </div>
+                          {selectedMethod === "splicing" && (
+                            <div>
+                              <label className="block text-gray-400 text-sm mb-1">
+                                Algorithm
+                              </label>
+                              <select
+                                value={splicingMethod}
+                                onChange={(e) => setSplicingMethod(e.target.value)}
+                                className="w-full bg-black/30 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              >
+                                <option value="edge">Edge Inconsistency</option>
+                                <option value="lighting">Lighting Analysis</option>
+                                <option value="combined">Combined</option>
+                              </select>
                             </div>
-                          </div>
+                          )}
+
+                          {selectedMethod === "inpainting" && (
+                            <div>
+                              <label className="block text-gray-400 text-sm mb-1">
+                                Algorithm
+                              </label>
+                              <select
+                                value={inpaintingMethod}
+                                onChange={(e) => setInpaintingMethod(e.target.value)}
+                                className="w-full bg-black/30 border border-gray-700 rounded-md py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              >
+                                <option value="texture">Texture Analysis</option>
+                                <option value="noise">Noise Analysis</option>
+                                <option value="combined">Combined</option>
+                              </select>
+                            </div>
+                          )}
+
+                          {selectedMethod === "metadata" && (
+                            <div>
+                              <label className="inline-flex items-center text-gray-300 hover:text-white cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  className="form-checkbox rounded text-blue-500 focus:ring-blue-500 focus:ring-opacity-50"
+                                  checked={metadataDetailed}
+                                  onChange={(e) => setMetadataDetailed(e.target.checked)}
+                                />
+                                <span className="ml-2">Detailed Analysis</span>
+                              </label>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Analysis Buttons */}
+                  {/* Analysis Button */}
                   <div className="flex flex-col sm:flex-row gap-4">
                     <motion.button
-                      onClick={handlePredict}
+                      onClick={handleAnalysis}
                       disabled={!file || isProcessing}
                       className={`flex-1 py-3 px-6 rounded-xl font-medium flex items-center justify-center ${
                         !file || isProcessing
@@ -506,45 +422,13 @@ const Detect: React.FC = () => {
                         </>
                       ) : (
                         <>
-                          <FaRegObjectGroup className="mr-2" />
-                          Analyze with CNN
+                          {renderMethodIcon(selectedMethod)}
+                          <span className="ml-2">
+                            Analyze with {selectedMethod === "comprehensive" ? "All Methods" : selectedMethod}
+                          </span>
                         </>
                       )}
                     </motion.button>
-
-                    {showEla && (
-                      <motion.button
-                        onClick={handleElaAnalysis}
-                        disabled={!file || isProcessing}
-                        className={`flex-1 py-3 px-6 rounded-xl font-medium flex items-center justify-center ${
-                          !file || isProcessing
-                            ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                            : "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white shadow-lg shadow-purple-500/20 transform hover:scale-105 transition-all duration-300"
-                        }`}
-                        whileHover={file && !isProcessing ? { scale: 1.05 } : {}}
-                        whileTap={file && !isProcessing ? { scale: 0.98 } : {}}
-                      >
-                        <FaMagic className="mr-2" />
-                        Error Level Analysis
-                      </motion.button>
-                    )}
-
-                    {showLocalization && (
-                      <motion.button
-                        onClick={handleHeatmapGeneration}
-                        disabled={!file || isProcessing}
-                        className={`flex-1 py-3 px-6 rounded-xl font-medium flex items-center justify-center ${
-                          !file || isProcessing
-                            ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                            : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 transform hover:scale-105 transition-all duration-300"
-                        }`}
-                        whileHover={file && !isProcessing ? { scale: 1.05 } : {}}
-                        whileTap={file && !isProcessing ? { scale: 0.98 } : {}}
-                      >
-                        <FaCrosshairs className="mr-2" />
-                        Generate Heatmap
-                      </motion.button>
-                    )}
                   </div>
 
                   {error && (
@@ -558,26 +442,15 @@ const Detect: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <AnalysisResult
+                  {/* Results Display */}
+                  <AnalysisResult 
                     result={result}
-                    apiBaseUrl="http://localhost:8000"
+                    apiBaseUrl={API_BASE_URL}
                     originalImage={preview || undefined}
                     onReset={handleReset}
-                    showLocalization={showLocalization}
-                    showEla={showEla}
+                    showLocalization={true}
+                    showEla={true}
                   />
-
-                  <div className="flex justify-center mt-6">
-                    <motion.button
-                      onClick={handleReset}
-                      className="py-3 px-6 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-xl font-medium flex items-center justify-center transition-all duration-300"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <FaExchangeAlt className="mr-2" />
-                      Analyze Another Image
-                    </motion.button>
-                  </div>
                 </>
               )}
             </div>

@@ -7,6 +7,7 @@ from torch.autograd import Variable
 import torchvision.transforms as transforms
 from skimage.util import view_as_windows
 from src.api.utils.logger import logger
+import io
 
 # Cache for feature vectors to avoid recomputing them
 feature_vector_cache = {}
@@ -91,44 +92,86 @@ def optimized_get_patch_yi(model, image):
         logger.warning("No patches could be processed, returning zero vector")
         return np.zeros(400)
 
-def get_feature_vector(image_path, model):
+def get_feature_vector(image_path_or_data, model):
     """
     Extract feature vector from an image with caching and optimizations
-    :param image_path: Path to the image file
+    :param image_path_or_data: Path to the image file or file-like object or bytes
     :param model: The pre-trained CNN model
     :returns: Feature vector for the image
     """
+    # Create a cache key based on the input type
+    cache_key = None
+    if isinstance(image_path_or_data, str):
+        cache_key = f"file:{image_path_or_data}"
+    elif isinstance(image_path_or_data, bytes):
+        cache_key = f"bytes:{hash(image_path_or_data)}"
+    elif hasattr(image_path_or_data, 'read') and hasattr(image_path_or_data, 'seek'):
+        # Get the current position
+        pos = image_path_or_data.tell()
+        # Read the content
+        content = image_path_or_data.read()
+        # Reset the position
+        image_path_or_data.seek(pos)
+        # Create a hash of the content
+        cache_key = f"buffer:{hash(content)}"
+    
     # Check if we have this image in cache
-    if image_path in feature_vector_cache:
-        logger.debug(f"Using cached feature vector for: {image_path}")
-        return feature_vector_cache[image_path]
+    if cache_key in feature_vector_cache:
+        logger.debug(f"Using cached feature vector for: {cache_key}")
+        return feature_vector_cache[cache_key]
     
     start_time = time.time()
-    logger.debug(f"Extracting feature vector from: {image_path}")
+    logger.debug(f"Extracting feature vector from: {cache_key}")
     feature_vector = np.empty((1, 400))
     
-    # Read image based on file extension
-    file_ext = os.path.splitext(image_path)[1].lower()
-    logger.debug(f"File extension: {file_ext}")
-    
-    if file_ext in ['.tif', '.tiff']:
-        # Use cv2.IMREAD_UNCHANGED for TIFF images to preserve all channels
-        img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-        logger.debug(f"TIFF image loaded, shape: {img.shape if img is not None else 'None'}, dtype: {img.dtype if img is not None else 'None'}")
+    # Read the image based on input type
+    if isinstance(image_path_or_data, str):
+        # It's a file path
+        file_ext = os.path.splitext(image_path_or_data)[1].lower()
+        logger.debug(f"File extension: {file_ext}")
         
-        # Convert to BGR if needed (some TIFF images might have more than 3 channels)
-        if img is not None and len(img.shape) > 2:
-            if img.shape[2] > 3:
-                logger.debug("TIFF image has more than 3 channels, converting to BGR")
-                img = img[:, :, :3]  # Take only the first 3 channels
+        if file_ext in ['.tif', '.tiff']:
+            # Use cv2.IMREAD_UNCHANGED for TIFF images to preserve all channels
+            img = cv2.imread(image_path_or_data, cv2.IMREAD_UNCHANGED)
+            logger.debug(f"TIFF image loaded, shape: {img.shape if img is not None else 'None'}, dtype: {img.dtype if img is not None else 'None'}")
+            
+            # Convert to BGR if needed (some TIFF images might have more than 3 channels)
+            if img is not None and len(img.shape) > 2:
+                if img.shape[2] > 3:
+                    logger.debug("TIFF image has more than 3 channels, converting to BGR")
+                    img = img[:, :, :3]  # Take only the first 3 channels
+        else:
+            # Regular image loading for JPG, PNG, etc.
+            img = cv2.imread(image_path_or_data)
+            logger.debug(f"Regular image loaded, shape: {img.shape if img is not None else 'None'}")
+    
+    elif isinstance(image_path_or_data, bytes):
+        # It's raw bytes, convert to numpy array
+        nparr = np.frombuffer(image_path_or_data, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        logger.debug(f"Image loaded from bytes, shape: {img.shape if img is not None else 'None'}")
+    
+    elif hasattr(image_path_or_data, 'read') and hasattr(image_path_or_data, 'seek'):
+        # It's a file-like object
+        # Save current position
+        pos = image_path_or_data.tell()
+        # Get image data
+        image_data = image_path_or_data.read()
+        # Reset position
+        image_path_or_data.seek(pos)
+        
+        # Convert to numpy array
+        nparr = np.frombuffer(image_data, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        logger.debug(f"Image loaded from buffer, shape: {img.shape if img is not None else 'None'}")
+    
     else:
-        # Regular image loading for JPG, PNG, etc.
-        img = cv2.imread(image_path)
-        logger.debug(f"Regular image loaded, shape: {img.shape if img is not None else 'None'}")
+        logger.error(f"Unsupported image input type: {type(image_path_or_data)}")
+        raise ValueError(f"Unsupported image input type: {type(image_path_or_data)}")
     
     if img is None:
-        logger.error(f"Failed to load image: {image_path}")
-        raise ValueError("Invalid image file")
+        logger.error(f"Failed to load image from: {cache_key}")
+        raise ValueError("Invalid image data")
     
     # Resize large images to reduce processing time
     h, w = img.shape[:2]
@@ -143,7 +186,7 @@ def get_feature_vector(image_path, model):
     feature_vector[0, :] = optimized_get_patch_yi(model, img)
     
     # Cache the result
-    feature_vector_cache[image_path] = feature_vector
+    feature_vector_cache[cache_key] = feature_vector
     
     elapsed_time = time.time() - start_time
     logger.debug(f"Feature vector extracted in {elapsed_time:.2f} seconds")

@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import * as THREE from "three";
 import {
   FaGithub,
   FaLinkedin,
@@ -8,16 +9,231 @@ import {
 } from "react-icons/fa";
 
 const About: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const threeContainerRef = useRef<HTMLDivElement>(null);
+
+  // Setup THREE.js scene
+  useEffect(() => {
+    if (!threeContainerRef.current) return;
+
+    // Setup scene
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    const renderer = new THREE.WebGLRenderer({ alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    threeContainerRef.current.appendChild(renderer.domElement);
+
+    // Create DNA-like helix structure
+    const particles: THREE.Mesh[] = [];
+    const particleGeometry = new THREE.SphereGeometry(0.2, 8, 8);
+    const particleMaterial = new THREE.MeshBasicMaterial({
+      color: 0x3498db,
+      transparent: true,
+      opacity: 0.7,
+    });
+
+    // Create DNA double helix
+    for (let i = 0; i < 100; i++) {
+      // First strand
+      const particle1 = new THREE.Mesh(particleGeometry, particleMaterial);
+      const angle1 = i * 0.2;
+      particle1.position.x = 5 * Math.cos(angle1);
+      particle1.position.y = i * 0.5 - 25;
+      particle1.position.z = 5 * Math.sin(angle1);
+      scene.add(particle1);
+      particles.push(particle1);
+
+      // Second strand
+      const particle2 = new THREE.Mesh(particleGeometry, particleMaterial);
+      const angle2 = i * 0.2 + Math.PI;
+      particle2.position.x = 5 * Math.cos(angle2);
+      particle2.position.y = i * 0.5 - 25;
+      particle2.position.z = 5 * Math.sin(angle2);
+      scene.add(particle2);
+      particles.push(particle2);
+
+      // Cross-links (only add some)
+      if (i % 5 === 0) {
+        const linkGeometry = new THREE.BoxGeometry(
+          Math.abs(particle1.position.x - particle2.position.x),
+          0.05,
+          0.05
+        );
+        const linkMaterial = new THREE.MeshBasicMaterial({
+          color: 0x9b59b6,
+          transparent: true,
+          opacity: 0.5,
+        });
+        const link = new THREE.Mesh(linkGeometry, linkMaterial);
+        link.position.x = (particle1.position.x + particle2.position.x) / 2;
+        link.position.y = particle1.position.y;
+        link.position.z = (particle1.position.z + particle2.position.z) / 2;
+        link.rotation.z = Math.atan2(
+          particle2.position.y - particle1.position.y,
+          particle2.position.x - particle1.position.x
+        );
+        scene.add(link);
+        particles.push(link);
+      }
+    }
+
+    // Create neural network model
+    const createNeuralNetwork = () => {
+      const layers = [4, 6, 6, 3]; // Nodes per layer
+      const layerDistance = 7;
+      const nodes: THREE.Mesh[] = [];
+      const connections: THREE.Line[] = [];
+
+      // Create nodes
+      for (let l = 0; l < layers.length; l++) {
+        const nodeCount = layers[l];
+        const layerX = l * layerDistance - 15;
+
+        for (let n = 0; n < nodeCount; n++) {
+          const y = (n - (nodeCount - 1) / 2) * 2;
+          const nodeGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+          const nodeMaterial = new THREE.MeshBasicMaterial({
+            color: 0x2ecc71,
+            transparent: true,
+            opacity: 0.8,
+          });
+          const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
+          node.position.set(layerX, y + 5, -5);
+          scene.add(node);
+          nodes.push(node);
+
+          // Connect to previous layer
+          if (l > 0) {
+            for (let p = 0; p < layers[l - 1]; p++) {
+              const prevY = (p - (layers[l - 1] - 1) / 2) * 2;
+              const prevNodeIndex = nodes.length - nodeCount - layers[l - 1] + p;
+
+              if (prevNodeIndex >= 0) {
+                const lineMaterial = new THREE.LineBasicMaterial({
+                  color: 0xe74c3c,
+                  transparent: true,
+                  opacity: 0.3,
+                });
+                const points = [
+                  new THREE.Vector3(layerX - layerDistance, prevY + 5, -5),
+                  new THREE.Vector3(layerX, y + 5, -5),
+                ];
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints(
+                  points
+                );
+                const line = new THREE.Line(lineGeometry, lineMaterial);
+                scene.add(line);
+                connections.push(line);
+              }
+            }
+          }
+        }
+      }
+
+      return { nodes, connections };
+    };
+
+    const neuralNetwork = createNeuralNetwork();
+
+    // Add an image recognition model (simplified cube structure)
+    const createImageModel = () => {
+      const imageGeometry = new THREE.BoxGeometry(5, 5, 0.2);
+      const imageMaterial = new THREE.MeshBasicMaterial({
+        color: 0x3498db,
+        transparent: true,
+        opacity: 0.5,
+      });
+      const image = new THREE.Mesh(imageGeometry, imageMaterial);
+      image.position.set(0, -10, 5);
+      scene.add(image);
+
+      // Add features as small cubes on the image
+      for (let i = 0; i < 10; i++) {
+        const featureGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.3);
+        const featureMaterial = new THREE.MeshBasicMaterial({
+          color: 0xe74c3c,
+          transparent: true,
+          opacity: 0.8,
+        });
+        const feature = new THREE.Mesh(featureGeometry, featureMaterial);
+        feature.position.set(
+          Math.random() * 4 - 2,
+          Math.random() * 4 - 2 - 10,
+          5.3
+        );
+        scene.add(feature);
+      }
+
+      return image;
+    };
+
+    const imageModel = createImageModel();
+
+    // Position camera
+    camera.position.z = 20;
+
+    // Animation loop
+    const animate = () => {
+      requestAnimationFrame(animate);
+
+      // Rotate DNA
+      particles.forEach((particle) => {
+        particle.rotation.x += 0.003;
+        particle.rotation.y += 0.002;
+      });
+
+      // Pulse neural network nodes
+      neuralNetwork.nodes.forEach((node, index) => {
+        const scale = 1 + 0.2 * Math.sin(Date.now() * 0.001 + index * 0.5);
+        node.scale.set(scale, scale, scale);
+      });
+
+      // Rotate image model
+      imageModel.rotation.y = Math.sin(Date.now() * 0.0005) * 0.2;
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    // Handle window resize
+    const handleResize = () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (threeContainerRef.current) {
+        threeContainerRef.current.removeChild(renderer.domElement);
+      }
+      particles.forEach((particle) => {
+        scene.remove(particle);
+        particle.geometry.dispose();
+        (particle.material as THREE.Material).dispose();
+      });
+    };
+  }, []);
+
   return (
-    <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 min-h-screen py-12 relative overflow-hidden">
-      {/* Animated gradient orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-cyan-400/20 to-blue-600/20 rounded-full blur-3xl animate-pulse z-0"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-purple-400/20 to-pink-600/20 rounded-full blur-3xl animate-pulse animation-delay-1000 z-0"></div>
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-emerald-400/15 to-teal-600/15 rounded-full blur-3xl animate-bounce z-0"></div>
+    <div ref={containerRef} className="relative min-h-screen py-12 overflow-hidden">
+      {/* THREE.js container (absolute positioned) */}
+      <div
+        ref={threeContainerRef}
+        className="absolute inset-0 z-0"
+        style={{ pointerEvents: "none" }}
+      />
 
-      {/* Dark overlay for better text readability */}
-      <div className="absolute inset-0 bg-black/40 z-0"></div>
-
+      {/* Content */}
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -41,7 +257,8 @@ const About: React.FC = () => {
                   based approach for detecting image forgeries, particularly
                   focusing on identifying manipulated regions within digital
                   images. The system can detect various types of image
-                  forgeries, including splicing, copy-move, and removal.
+                  forgeries, including copy-move, splicing, inpainting, double JPEG compression,
+                  and metadata tampering.
                 </p>
 
                 <h3>Technical Overview</h3>
@@ -56,8 +273,7 @@ const About: React.FC = () => {
                 <h3>Key Features</h3>
                 <ul>
                   <li>
-                    Detection of multiple forgery types (splicing, copy-move,
-                    etc.)
+                    Multiple forgery detection techniques
                   </li>
                   <li>
                     Localization of tampered regions with heatmap visualization
@@ -70,25 +286,22 @@ const About: React.FC = () => {
                 </ul>
 
                 <h3>Methodology</h3>
-                <p>The detection process involves several steps:</p>
+                <p>The detection process involves several specialized techniques:</p>
                 <ol>
                   <li>
-                    <strong>Feature Extraction:</strong> The CNN extracts
-                    relevant features from the input image that may indicate
-                    manipulation.
+                    <strong>Copy-Move Detection:</strong> Identifies duplicated regions within the same image using ORB keypoints or DCT coefficients.
                   </li>
                   <li>
-                    <strong>Anomaly Detection:</strong> The model identifies
-                    regions with inconsistent patterns or statistical anomalies.
+                    <strong>Splicing Detection:</strong> Locates inconsistencies in edges and lighting that occur when content from one image is inserted into another.
                   </li>
                   <li>
-                    <strong>Classification:</strong> Based on the extracted
-                    features, the system classifies the image as authentic or
-                    forged.
+                    <strong>Inpainting Detection:</strong> Finds areas that have been filled in using AI or content-aware fill tools.
                   </li>
                   <li>
-                    <strong>Localization:</strong> For forged images, the system
-                    generates a heatmap highlighting the tampered regions.
+                    <strong>Double JPEG Detection:</strong> Detects artifacts from multiple JPEG compressions that indicate editing and resaving.
+                  </li>
+                  <li>
+                    <strong>Metadata Analysis:</strong> Examines EXIF data for inconsistencies that suggest tampering.
                   </li>
                 </ol>
 
@@ -98,7 +311,7 @@ const About: React.FC = () => {
                   <li>Python with PyTorch for the CNN model development</li>
                   <li>FastAPI for the backend API</li>
                   <li>React and Tailwind CSS for the frontend interface</li>
-                  <li>Docker for containerization and deployment</li>
+                  <li>OpenCV and scikit-image for image processing</li>
                 </ul>
               </div>
             </div>
@@ -153,9 +366,7 @@ const About: React.FC = () => {
                 </ul>
 
                 <p>
-                  Our implementation incorporates elements from these approaches
-                  while introducing several enhancements to improve detection
-                  accuracy and computational efficiency.
+                  Our implementation incorporates specialized detection techniques for different types of forgeries, providing a comprehensive analysis system that can detect various manipulation methods.
                 </p>
               </div>
             </div>

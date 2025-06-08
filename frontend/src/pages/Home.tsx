@@ -218,9 +218,8 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              Powered by ensemble deep learning architectures and trained on
-              millions of forensic samples to detect even the most sophisticated
-              image manipulations.
+              Powered by advanced computer vision algorithms and deep learning techniques 
+              to detect multiple types of image forgeries with high precision.
             </motion.p>
           </div>
 
@@ -236,9 +235,9 @@ const Home = () => {
               },
               {
                 icon: <FaBrain className="h-7 w-7" />,
-                title: "Ensemble AI Models",
+                title: "Multiple Detection Methods",
                 description:
-                  "Multiple specialized neural networks working in harmony to achieve unprecedented detection accuracy.",
+                  "Specialized detection algorithms for copy-move, splicing, inpainting, double JPEG, and metadata analysis.",
                 gradient: "from-purple-500 via-pink-500 to-rose-500",
                 color: "purple",
               },
@@ -372,9 +371,9 @@ const Home = () => {
               },
               {
                 number: 2,
-                title: "AI Ensemble Analysis",
+                title: "Multi-Method Analysis",
                 description:
-                  "Multiple specialized neural networks analyze different aspects: compression artifacts, statistical anomalies, and pixel patterns.",
+                  "Each image is analyzed using five specialized techniques: copy-move detection, splicing detection, inpainting detection, JPEG compression analysis, and metadata examination.",
                 icon: <FaBrain className="h-8 w-8" />,
                 gradient: "from-blue-500 to-purple-500",
               },
