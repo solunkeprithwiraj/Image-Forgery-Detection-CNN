@@ -4,6 +4,7 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from src.api.routes.prediction_routes import router as prediction_router
+from src.api.routes.forgery_detection_routes import router as forgery_router
 from PIL import Image
 from src.api.services.ela import generate_ela_image
 from src.api.utils.logger import setup_logger
@@ -37,6 +38,13 @@ app.include_router(
     prefix="/api",
     dependencies=[],  # Remove dependency from router level
     tags=["predictions"]
+)
+
+app.include_router(
+    forgery_router,
+    prefix="/api",
+    dependencies=[],
+    tags=["forgery_detection"]
 )
 
 # Startup event
