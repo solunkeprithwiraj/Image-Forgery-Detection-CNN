@@ -49,8 +49,8 @@ def detect_copy_move_orb(image, min_matches=10, min_cluster_size=3, eps=40):
     img_np = np.array(image)
     img_gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
     
-    # Initialize ORB detector
-    orb = cv2.ORB_create(nfeatures=5000)
+    # Initialize ORB detector with more features for better detection
+    orb = cv2.ORB_create(nfeatures=8000)
     
     # Find keypoints and descriptors
     kp, des = orb.detectAndCompute(img_gray, None)
@@ -72,7 +72,7 @@ def detect_copy_move_orb(image, min_matches=10, min_cluster_size=3, eps=40):
         # Skip self-matches (same keypoint)
         if m.queryIdx != m.trainIdx:
             # Check if the distance is reasonable
-            if m.distance < 50:  # Adjust this threshold as needed
+            if m.distance < 55:  # Slightly relaxed threshold
                 valid_matches.append(m)
     
     if len(valid_matches) < min_matches:
@@ -103,7 +103,7 @@ def detect_copy_move_orb(image, min_matches=10, min_cluster_size=3, eps=40):
     # Convert to numpy array
     points = np.array(all_points)
     
-    # Apply DBSCAN clustering
+    # Apply DBSCAN clustering with improved parameters
     clustering = DBSCAN(eps=eps, min_samples=min_cluster_size).fit(points)
     labels = clustering.labels_
     
@@ -160,7 +160,27 @@ def detect_copy_move_orb(image, min_matches=10, min_cluster_size=3, eps=40):
         })
     
     # Calculate confidence based on number of clusters and matches
-    confidence = min(0.95, 0.5 + (len(valid_clusters) * 0.1) + (len(matched_pairs) / 1000))
+    # Improved confidence calculation for more accurate results
+    n_valid_clusters = len(valid_clusters)
+    n_matched_pairs = len(matched_pairs)
+    
+    # Base confidence on multiple factors
+    cluster_factor = min(1.0, (n_valid_clusters - 1) * 0.2)  # More clusters = higher confidence
+    pairs_factor = min(1.0, n_matched_pairs / 200)  # More matched pairs = higher confidence
+    density_factor = 0.0
+    
+    # Calculate density factor (how dense are the clusters)
+    for cluster_points in valid_clusters.values():
+        cluster_size = len(cluster_points)
+        pts = np.array(cluster_points, dtype=np.int32)
+        x, y, w, h = cv2.boundingRect(pts)
+        area = w * h
+        if area > 0:
+            density = cluster_size / area
+            density_factor = max(density_factor, min(1.0, density * 5000))
+    
+    # Combine factors with weights
+    confidence = min(0.95, 0.3 + (cluster_factor * 0.4) + (pairs_factor * 0.3) + (density_factor * 0.3))
     
     elapsed_time = time.time() - start_time
     logger.info(f"Copy-move detection completed in {elapsed_time:.2f} seconds with confidence {confidence:.2f}")
@@ -319,7 +339,16 @@ def detect_copy_move_dct(image, block_size=8, threshold=0.95, eps=5):
         })
     
     # Calculate confidence based on number of clusters and matches
-    confidence = min(0.95, 0.5 + (len(valid_clusters) * 0.1) + (len(similar_pairs) / 100))
+    # Improved confidence calculation for more accurate results
+    n_valid_clusters = len(valid_clusters)
+    n_similar_pairs = len(similar_pairs)
+    
+    # Base confidence on multiple factors
+    cluster_factor = min(1.0, (n_valid_clusters - 1) * 0.2)  # More clusters = higher confidence
+    pairs_factor = min(1.0, n_similar_pairs / 50)  # More similar pairs = higher confidence
+    
+    # Combine factors with weights
+    confidence = min(0.95, 0.3 + (cluster_factor * 0.4) + (pairs_factor * 0.6))
     
     elapsed_time = time.time() - start_time
     logger.info(f"Copy-move DCT detection completed in {elapsed_time:.2f} seconds with confidence {confidence:.2f}")

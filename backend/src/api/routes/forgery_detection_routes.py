@@ -11,16 +11,18 @@ import numpy as np
 
 router = APIRouter(prefix='/forgery', tags=['forgery_detection'])
 
-@router.post('/copy-move')
-async def detect_copy_move(
+# Copy-move detection has been removed and replaced with pixel-based detection
+
+@router.post('/pixel-based')
+async def detect_pixel_based(
     file: UploadFile = File(...),
-    method: str = Form("orb"),
+    method: str = Form("jpeg-grid"),
     max_size: int = Form(1200)
 ):
     """
-    Detect copy-move forgery in an image
+    Detect pixel-level forgery in an image using artifact analysis
     """
-    logger.info(f"Received copy-move detection request using {method} method")
+    logger.info(f"Received pixel-based detection request using {method} method")
     
     temp_path = None
     img = None
@@ -46,12 +48,12 @@ async def detect_copy_move(
             ela_data_uri = None
         
         # Import the service
-        if method.lower() == "orb":
-            from src.api.services.copy_move import detect_copy_move_orb
-            result_img, confidence, regions = detect_copy_move_orb(img)
+        if method.lower() == "jpeg-grid":
+            from src.api.services.pixel_based import detect_jpeg_grid
+            result_img, confidence, regions = detect_jpeg_grid(img)
         else:
-            from src.api.services.copy_move import detect_copy_move_dct
-            result_img, confidence, regions = detect_copy_move_dct(img)
+            from src.api.services.pixel_based import detect_pixel_forgery
+            result_img, confidence, regions = detect_pixel_forgery(img)
         
         # Determine if image is tampered based on confidence
         is_tampered = confidence > 0.5
@@ -62,7 +64,7 @@ async def detect_copy_move(
             "confidence": float(confidence),
             "detected_regions": regions if is_tampered else [],
             "method": method,
-            "forgery_type": "copy-move",
+            "forgery_type": "pixel-based",
             "ela_image_url": ela_data_uri
         }
         
@@ -79,13 +81,13 @@ async def detect_copy_move(
                 "X-Forgery-Prediction": prediction["prediction"],
                 "X-Forgery-Confidence": str(confidence),
                 "X-Forgery-Method": method,
-                "X-Forgery-Type": "copy-move",
+                "X-Forgery-Type": "pixel-based",
                 "X-Forgery-Details": str(prediction)
             }
         )
     
     except Exception as e:
-        logger.error(f"Error in copy-move detection: {str(e)}")
+        logger.error(f"Error in pixel-based detection: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Detection error: {str(e)}")
     
     finally:
@@ -466,7 +468,7 @@ async def comprehensive_forgery_detection(
         img = image_storage.get_image(image_id)
         
         # Import the services
-        from src.api.services.copy_move import detect_copy_move_orb
+        from src.api.services.pixel_based import detect_pixel_forgery
         from src.api.services.splicing import detect_splicing_combined
         from src.api.services.inpainting import detect_inpainting_combined
         from src.api.services.metadata import check_metadata_tampering
@@ -557,14 +559,14 @@ async def comprehensive_forgery_detection(
             logger.error(f"Error in frequency analysis: {str(e)}")
         
         # Run all detection methods
-        _, copy_move_confidence, copy_move_regions = detect_copy_move_orb(img)
+        _, pixel_based_confidence, pixel_based_regions = detect_pixel_forgery(img)
         _, splicing_confidence = detect_splicing_combined(img)
         _, inpainting_confidence = detect_inpainting_combined(img)
         metadata_results, metadata_confidence = check_metadata_tampering(img)
         
         # Create a collection of all detection results with their confidences and predictions
         detection_results = [
-            {"method": "copy-move", "confidence": float(copy_move_confidence), "prediction": "tampered" if copy_move_confidence > 0.5 else "authentic"},
+            {"method": "pixel-based", "confidence": float(pixel_based_confidence), "prediction": "tampered" if pixel_based_confidence > 0.5 else "authentic"},
             {"method": "splicing", "confidence": float(splicing_confidence), "prediction": "tampered" if splicing_confidence > 0.5 else "authentic"},
             {"method": "inpainting", "confidence": float(inpainting_confidence), "prediction": "tampered" if inpainting_confidence > 0.5 else "authentic"},
             {"method": "metadata", "confidence": float(metadata_confidence), "prediction": "tampered" if metadata_confidence > 0.5 else "authentic"}
@@ -592,13 +594,18 @@ async def comprehensive_forgery_detection(
             if result["confidence"] >= 0.5:
                 if result["prediction"] == "tampered":
                     tampered_votes += 1
+                    # Give special weight to CNN prediction and high confidence predictions
+                    if (result["method"] == "cnn-direct" and result["confidence"] > 0.95) or result["confidence"] > 0.9:
+                        # Add an extra vote for highly confident tampered predictions
+                        tampered_votes += 1
+                        logger.debug(f"Adding extra vote for highly confident tampered prediction: {result['method']} with {result['confidence']}")
                 elif result["prediction"] == "authentic":
                     authentic_votes += 1
-                    # Give special weight to CNN prediction if confidence is very high (>0.95)
-                    if result["method"] == "cnn-direct" and result["confidence"] > 0.95:
-                        # Add an extra vote for highly confident CNN predictions
+                    # Give special weight to CNN prediction and high confidence predictions
+                    if (result["method"] == "cnn-direct" and result["confidence"] > 0.95) or result["confidence"] > 0.9:
+                        # Add an extra vote for highly confident authentic predictions
                         authentic_votes += 1
-                        logger.debug(f"Adding extra vote for highly confident CNN prediction: {result['confidence']}")
+                        logger.debug(f"Adding extra vote for highly confident authentic prediction: {result['method']} with {result['confidence']}")
         
         # Log the vote counts for debugging
         logger.debug(f"Vote counts: Tampered={tampered_votes}, Authentic={authentic_votes}")
@@ -648,12 +655,7 @@ async def comprehensive_forgery_detection(
             "filename": file.filename,
             "original_size": {"width": img.width, "height": img.height},
             "ela_image_url": ela_data_uri,  # Include ELA image URL in the response
-            "results": {
-                "copy_move": {
-                    "confidence": float(copy_move_confidence),
-                    "prediction": "tampered" if copy_move_confidence > 0.5 else "authentic",
-                    "detected_regions": copy_move_regions if copy_move_confidence > 0.5 else []
-                },
+            "results": {                
                 "splicing": {
                     "confidence": float(splicing_confidence),
                     "prediction": "tampered" if splicing_confidence > 0.5 else "authentic"
