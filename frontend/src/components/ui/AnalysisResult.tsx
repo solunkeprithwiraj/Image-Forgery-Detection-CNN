@@ -61,7 +61,7 @@ interface AnalysisResult {
       prediction: string;
       analysis: any;
     };
-    cnn_direct?: {
+    cnn?: {
       confidence: number;
       prediction: string;
       processing_time: number;
