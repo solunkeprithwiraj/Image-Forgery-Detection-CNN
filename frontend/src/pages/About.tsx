@@ -257,7 +257,7 @@ const About: React.FC = () => {
                   based approach for detecting image forgeries, particularly
                   focusing on identifying manipulated regions within digital
                   images. The system can detect various types of image
-                  forgeries, including copy-move, splicing, inpainting, double JPEG compression,
+                  forgeries, including copy-move, splicing, inpainting, compression,
                   and metadata tampering.
                 </p>
 
@@ -296,9 +296,6 @@ const About: React.FC = () => {
                   </li>
                   <li>
                     <strong className="text-white">Inpainting Detection:</strong> Finds areas that have been filled in using AI or content-aware fill tools.
-                  </li>
-                  <li>
-                    <strong className="text-white">Double JPEG Detection:</strong> Detects artifacts from multiple JPEG compressions that indicate editing and resaving.
                   </li>
                   <li>
                     <strong className="text-white">Metadata Analysis:</strong> Examines EXIF data for inconsistencies that suggest tampering.

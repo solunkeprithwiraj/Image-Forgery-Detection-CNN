@@ -47,7 +47,7 @@ const Footer: React.FC = () => {
             </p>
             <div className="flex space-x-4">
               <a
-                href="https://github.com/solunkeprithwiraj/image-forgery-detection-cnn"
+                href="https://github.com/solunkeprithwiraj/Image-Forgery-Detection-CNN"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition duration-200"

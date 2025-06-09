@@ -373,7 +373,7 @@ const ThreeDModel = () => {
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm">
           <div className="text-center">
             <div className="animate-spin w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <div className="text-cyan-400 font-medium">Initializing Neural Network...</div>
+            <div className="text-cyan-400 font-medium">Loading...</div>
           </div>
         </div>
       )}

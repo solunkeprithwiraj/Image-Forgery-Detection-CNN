@@ -86,7 +86,7 @@ const Home = () => {
               >
                 <FaShieldAlt className="text-cyan-400 mr-2" />
                 <span className="text-cyan-300 text-sm font-medium">
-                  Next-Gen AI Security
+                  Image Manipulation Detection
                 </span>
               </motion.div>
 
@@ -104,8 +104,7 @@ const Home = () => {
 
               <p className="text-xl text-gray-200 mb-8 max-w-lg leading-relaxed">
                 Detect sophisticated image manipulations with state-of-the-art
-                deep learning. Protect digital authenticity with military-grade
-                precision.
+                deep learning. Protect digital authenticity with precision.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -131,7 +130,7 @@ const Home = () => {
                     whileTap={{ scale: 0.98 }}
                   >
                     <FaCog className="mr-2" />
-                    Learn Technology
+                    Learn About Our Tech
                   </motion.button>
                 </Link>
               </div>
@@ -141,16 +140,16 @@ const Home = () => {
                 {[
                   {
                     label: "Accuracy",
-                    value: "99.2%",
+                    value: "96%",
                     color: "from-green-400 to-emerald-500",
                   },
                   {
                     label: "Speed",
-                    value: "< 2s",
+                    value: "< 5s",
                     color: "from-blue-400 to-cyan-500",
                   },
                   {
-                    label: "Models",
+                    label: "Methods",
                     value: "5+",
                     color: "from-purple-400 to-pink-500",
                   },
@@ -240,7 +239,7 @@ const Home = () => {
                 icon: <FaBrain className="h-7 w-7" />,
                 title: "Multiple Detection Methods",
                 description:
-                  "Specialized detection algorithms for copy-move, splicing, inpainting, double JPEG, and metadata analysis.",
+                  "Specialized detection algorithms for copy-move, splicing, inpainting, and metadata analysis.",
                 gradient: "from-purple-500 via-pink-500 to-rose-500",
                 color: "purple",
               },
@@ -421,7 +420,7 @@ const Home = () => {
                 </div>
 
                 {/* Connection line */}
-                {index < 2 && (
+                {index < 5 && (
                   <div className="hidden md:block absolute top-1/2 -right-6 w-12 h-0.5 bg-gradient-to-r from-white/40 to-transparent"></div>
                 )}
               </motion.div>
@@ -450,14 +449,14 @@ const Home = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
-                value: "99.2%",
+                value: "96%",
                 label: "Detection Accuracy",
                 icon: <FaCheckCircle className="h-8 w-8" />,
                 gradient: "from-green-400 to-emerald-500",
                 description: "Verified on 100K+ samples",
               },
               {
-                value: "< 2s",
+                value: "< 5s",
                 label: "Processing Time",
                 icon: <FaTachometerAlt className="h-8 w-8" />,
                 gradient: "from-blue-400 to-cyan-500",
@@ -471,7 +470,7 @@ const Home = () => {
                 description: "Pixel-perfect detection",
               },
               {
-                value: "15+",
+                value: "5+",
                 label: "Forgery Types",
                 icon: <FaShieldAlt className="h-8 w-8" />,
                 gradient: "from-orange-400 to-red-500",
@@ -559,16 +558,7 @@ const Home = () => {
                 </motion.button>
               </Link>
 
-              <Link to="/enterprise">
-                <motion.button
-                  className="px-10 py-5 bg-white/10 backdrop-blur-xl hover:bg-white/20 text-white rounded-2xl font-bold text-lg shadow-xl border border-white/20 hover:border-white/40 transition-all duration-300 flex items-center"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <FaShieldAlt className="mr-3" />
-                  Enterprise Solutions
-                </motion.button>
-              </Link>
+              
             </div>
 
             {/* Trust indicators */}
@@ -581,7 +571,7 @@ const Home = () => {
                 },
                 {
                   icon: <FaCheckCircle className="h-6 w-6" />,
-                  title: "99.2% Accurate",
+                  title: "96% Accurate",
                   description: "Verified on forensic datasets",
                 },
                 {
